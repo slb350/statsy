@@ -1,0 +1,31 @@
+# Swift Package Manager
+.build/
+.swiftpm/
+Package.resolved
+
+# Xcode
+*.xcodeproj
+*.xcworkspace
+xcuserdata/
+DerivedData/
+*.xcuserstate
+
+# Built bundle
+Statsy.app/
+
+# Generated design canvas, re-seeded from the .dc.html artboards
+design/statsy-panel.html
+
+# macOS
+.DS_Store
+._*
+
+# Agent instructions, kept local
+CLAUDE.md
+AGENTS.md
+.claude/
+
+# Scratch
+*.log
+tmp/
+scratch/

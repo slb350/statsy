@@ -1,0 +1,198 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&display=swap">
+  <style>
+    body { margin: 0; background: #000000; }
+    a { color: #9C59D1; } a:hover { color: #FCF434; }
+    .lbl { font-family: "IBM Plex Sans Condensed", system-ui, sans-serif; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; }
+    .mono { font-family: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace; font-variant-numeric: tabular-nums; }
+    .num { font-family: "Saira Condensed", "Helvetica Neue", Helvetica, sans-serif; font-weight: 800; font-variant-numeric: tabular-nums; }
+  </style>
+</helmet>
+
+<div style="width: 1280px; height: 480px; box-sizing: border-box; background: #0A0910; color: #F4F2F7; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; overflow: hidden;">
+
+  <div style="display: flex; align-items: center; justify-content: space-between; height: 20px; flex-shrink: 0;">
+    <div style="display: flex; align-items: baseline; gap: 10px;">
+      <div class="num" style="font-size: 19px; line-height: 1; color: #FFFFFF; letter-spacing: 0.04em;">STATSY</div>
+      <div class="mono" style="font-size: 9.5px; color: #635D73;">74 SECOND WINDOW &middot; 1 HZ</div>
+    </div>
+    <div class="mono" style="font-size: 9.5px; color: #4E4960;">M5 MAX &middot; 18 CORES &middot; 128 GB &middot; UP 29d</div>
+  </div>
+
+  <div style="display: flex; gap: 9px; flex: 1; min-height: 0;">
+    <sc-for list="{{panes}}" as="p" hint-placeholder-count="3">
+      <div style="flex: 1; min-width: 0; background: #131118; border: 1px solid #2C2C2C; padding: 10px 12px 9px; box-sizing: border-box; display: flex; flex-direction: column; gap: 6px;">
+
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <div style="display: flex; align-items: center; gap: 7px;">
+            <div style="width: 6px; height: 6px; background: {{p.col}};"></div>
+            <div class="lbl" style="font-size: 12px; color: {{p.col}};">{{p.title}}</div>
+          </div>
+          <div class="mono" style="font-size: 9px; color: #4E4960;">{{p.meta}}</div>
+        </div>
+
+        <div style="position: relative; height: 166px; background: #100E16;">
+          <svg viewBox="0 0 370 166" preserveAspectRatio="none" style="position: absolute; inset: 0; width: 100%; height: 100%;">
+            <line x1="0" y1="41.5" x2="370" y2="41.5" stroke="#221F2B" stroke-width="1"></line>
+            <line x1="0" y1="83" x2="370" y2="83" stroke="#221F2B" stroke-width="1"></line>
+            <line x1="0" y1="124.5" x2="370" y2="124.5" stroke="#221F2B" stroke-width="1"></line>
+            <path d="{{p.area}}" fill="{{p.fill}}"></path>
+            <path d="{{p.line}}" fill="none" stroke="{{p.col}}" stroke-width="1.6" vector-effect="non-scaling-stroke"></path>
+          </svg>
+          <div style="position: absolute; top: 8px; left: 10px; display: flex; align-items: baseline; gap: 5px;">
+            <div class="num" style="font-size: 52px; line-height: 0.76; color: {{p.col}};">{{p.now}}</div>
+            <div class="lbl" style="font-size: 13px; color: #635D73;">{{p.unit}}</div>
+          </div>
+          <div style="position: absolute; top: 8px; right: 10px; text-align: right;">
+            <div class="lbl" style="font-size: 8px; color: #4E4960;">Peak</div>
+            <div class="mono" style="font-size: 11px; color: #FCF434;">{{p.peak}}</div>
+          </div>
+          <div style="position: absolute; bottom: 6px; left: 10px;">
+            <div class="mono" style="font-size: 9px; color: #4E4960;">{{p.sub}}</div>
+          </div>
+        </div>
+
+        <div class="mono" style="display: flex; justify-content: space-between; font-size: 8.5px; color: #4E4960;">
+          <span>&minus;74 s</span><span>SCALE {{p.scale}}</span><span>NOW</span>
+        </div>
+
+        <div style="flex: 1; min-height: 0; display: flex; flex-direction: column;">
+          <div class="lbl" style="font-size: 8.5px; color: #4E4960; margin-bottom: 2px; display: flex; justify-content: space-between;">
+            <span>{{p.listTitle}}</span><span>{{p.listUnit}}</span>
+          </div>
+          <sc-for list="{{p.rows}}" as="r" hint-placeholder-count="5">
+            <div style="position: relative; height: 20px; display: flex; align-items: center; gap: 7px; padding: 0 5px; box-sizing: border-box;">
+              <div style="position: absolute; left: 0; top: 0; bottom: 0; width: {{r.rel}}%; background: {{p.fill}};"></div>
+              <div class="mono" style="position: relative; flex: 1; min-width: 0; font-size: 11px; color: #CFC9DC; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{r.name}}</div>
+              <div class="num" style="position: relative; font-size: 14px; color: {{p.col}};">{{r.val}}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="height: 46px; flex-shrink: 0; background: #131118; border: 1px solid #2C2C2C; box-sizing: border-box; padding: 0 14px; display: flex; align-items: center; gap: 16px;">
+    <sc-for list="{{temps}}" as="t" hint-placeholder-count="5">
+      <div style="flex: 1; min-width: 0;">
+        <div class="lbl" style="font-size: 8px; color: #4E4960; white-space: nowrap;">{{t.name}}</div>
+        <div style="display: flex; align-items: baseline; gap: 3px;">
+          <div class="num" style="font-size: 22px; line-height: 1; color: {{t.col}};">{{t.val}}</div>
+          <div class="lbl" style="font-size: 8px; color: #635D73;">&deg;C</div>
+        </div>
+        <div style="height: 2px; background: #1E1B26; margin-top: 3px;">
+          <div style="width: {{t.pct}}%; height: 100%; background: {{t.col}};"></div>
+        </div>
+      </div>
+    </sc-for>
+    <div style="width: 1px; height: 30px; background: #2C2C2C;"></div>
+    <sc-for list="{{fans}}" as="f" hint-placeholder-count="2">
+      <div style="flex: 1; min-width: 0;">
+        <div class="lbl" style="font-size: 8px; color: #4E4960;">{{f.name}}</div>
+        <div style="display: flex; align-items: baseline; gap: 3px;">
+          <div class="num" style="font-size: 22px; line-height: 1; color: #C79BEA;">{{f.rpm}}</div>
+          <div class="lbl" style="font-size: 8px; color: #635D73;">rpm</div>
+        </div>
+        <div style="height: 2px; background: #1E1B26; margin-top: 3px;">
+          <div style="width: {{f.pct}}%; height: 100%; background: #9C59D1;"></div>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+
+</div>
+</x-dc>
+
+<script data-dc-script data-props='{"$preview":{"width":1280,"height":480}}'>
+class Component extends DCLogic {
+  ramp(t) {
+    const a = [156, 89, 209], b = [252, 244, 52];
+    const m = a.map((v, i) => Math.round(v + (b[i] - v) * Math.max(0, Math.min(1, t))));
+    return 'rgb(' + m[0] + ',' + m[1] + ',' + m[2] + ')';
+  }
+  paths(vals, lo, hi) {
+    const w = 370, h = 166, n = vals.length;
+    const x = (i) => (i / (n - 1)) * w;
+    const y = (v) => h - ((v - lo) / (hi - lo)) * h;
+    let line = 'M' + x(0).toFixed(1) + ',' + y(vals[0]).toFixed(1);
+    for (let i = 1; i < n; i++) line += ' L' + x(i).toFixed(1) + ',' + y(vals[i]).toFixed(1);
+    return { line: line, area: line + ' L370,166 L0,166 Z' };
+  }
+  renderVals() {
+    const CPU = [14.0,12.5,11.6,12.4,11.8,12.9,12.7,12.2,12.9,11.5,12.8,11.4,11.9,12.0,12.4,12.3,13.2,13.0,12.7,13.5,18.2,21.0,27.7,29.0,28.8,28.4,28.8,38.3,33.3,32.3,33.5,32.8,40.3,40.4,36.5,32.5,34.0,57.0,29.5,29.9,31.0,31.1,30.5,29.8,39.8,27.6,27.6,26.0,26.9,22.6,11.9,13.8,12.2,12.1,12.1,11.6,14.1,11.2,12.1,11.2,12.8,12.0,13.6,12.9,15.1,13.5,14.8,16.2,13.4,13.2,14.4,12.6,16.6,24.9];
+    const MEM = [113.99,113.93,114.16,114.09,114.05,113.99,113.96,113.94,113.95,113.87,114.18,114.17,114.29,114.20,114.13,114.09,114.04,114.01,113.96,113.92,114.04,113.97,114.38,114.53,114.60,115.04,115.08,114.47,114.53,114.58,114.67,114.69,115.11,115.17,115.30,115.35,115.46,114.27,114.36,114.47,114.91,114.94,115.21,115.18,114.67,114.49,114.59,114.69,114.76,114.00,113.92,114.03,114.16,114.11,114.08,114.39,114.29,114.24,114.13,114.07,114.02,113.99,114.23,114.17,114.12,114.05,114.05,114.05,113.97,113.94,114.28,114.17,114.49,114.56];
+    const DSK = [0.42,0.58,0.03,0.39,0.05,0.02,8.75,0.04,6.63,1.43,0.40,4.21,0.09,0.09,0.08,0.06,0.23,4.01,0.00,4.14,0.01,0.03,0.07,0.02,0.03,0.07,0.00,0.69,0.18,0.70,0.08,0.02,0.00,0.74,0.26,0.03,7.80,0.02,0.02,0.31,0.06,0.57,0.27,1.04,0.02,0.02,0.00,0.03,0.02,0.37,0.00,17.89,0.00,0.02,0.01,0.00,25.62,0.02,0.01,1.12,0.00,2.29,1.01,0.29,0.13,0.59,5.21,0.25,0.78,0.38,0.01,0.85,0.02,0.10];
+    const dmax = Math.max.apply(null, DSK);
+    const dnow = DSK[DSK.length - 1];
+
+    const cpuP = this.paths(CPU, 0, 60);
+    const memP = this.paths(MEM, 113.5, 116);
+    const dskP = this.paths(DSK, 0, Math.max(dmax * 1.1, 1));
+
+    const temps = [['CPU', 59.2], ['GPU', 57.7], ['Enclosure', 58.5], ['SSD', 37.8], ['Battery', 32.1]];
+
+    return {
+      panes: [
+        {
+          title: 'Processor', col: '#9C59D1', fill: 'rgba(156, 89, 209, 0.18)',
+          meta: '18 CORES', now: '24.9', unit: '%', peak: '57.0 %', scale: '0 – 60 %',
+          sub: 'AVG 20.6 % · MIN 11.2 %', line: cpuP.line, area: cpuP.area,
+          listTitle: 'Top processes', listUnit: '% of one core',
+          rows: [
+            { name: 'Safari', val: '88.2', rel: 100 },
+            { name: 'WindowServer', val: '39.4', rel: 44.7 },
+            { name: 'kernel_task', val: '14.7', rel: 16.7 },
+            { name: 'sysmond', val: '10.7', rel: 12.1 },
+            { name: 'fseventsd', val: '8.9', rel: 10.1 }
+          ]
+        },
+        {
+          title: 'Memory', col: '#FCF434', fill: 'rgba(252, 244, 52, 0.15)',
+          meta: '128 GB', now: '114.6', unit: 'GB', peak: '115.5 GB', scale: '113.5 – 116 GB',
+          sub: 'DRIFT 1.6 GB · SWAP 89.9 %', line: memP.line, area: memP.area,
+          listTitle: 'Largest footprints', listUnit: 'resident',
+          rows: [
+            { name: 'mlxfast-runtime', val: '27.0', rel: 100 },
+            { name: 'kernel_task', val: '20.0', rel: 74.1 },
+            { name: 'com.apple.VirtualMemory', val: '8.0', rel: 29.6 },
+            { name: 'Safari', val: '7.7', rel: 28.5 },
+            { name: 'com.apple.WebKit', val: '4.1', rel: 15.2 }
+          ]
+        },
+        {
+          title: 'Storage', col: '#FFFFFF', fill: 'rgba(255, 255, 255, 0.12)',
+          meta: '1.8 TiB NVME', now: dnow.toFixed(1), unit: 'MB/s', peak: dmax.toFixed(1) + ' MB/s',
+          scale: '0 – ' + (dmax * 1.1).toFixed(0) + ' MB/s',
+          sub: '71 % FULL · 535 GiB FREE', line: dskP.line, area: dskP.area,
+          listTitle: 'Volumes', listUnit: 'used',
+          rows: [
+            { name: 'Data', val: '1285', rel: 100 },
+            { name: 'VM (swap)', val: '12', rel: 0.9 },
+            { name: 'System', val: '11', rel: 0.9 },
+            { name: 'Lifetime read', val: '13 TB', rel: 56.5 },
+            { name: 'Lifetime write', val: '10 TB', rel: 43.5 }
+          ]
+        }
+      ],
+      temps: temps.map((t) => ({
+        name: t[0], val: t[1].toFixed(1), col: this.ramp((t[1] - 30) / 60),
+        pct: Math.min(100, ((t[1] - 20) / 80) * 100)
+      })),
+      fans: [
+        { name: 'Fan 0', rpm: '1350', pct: (1350 / 5349) * 100 },
+        { name: 'Fan 1', rpm: '1461', pct: (1461 / 5777) * 100 }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

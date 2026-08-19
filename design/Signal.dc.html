@@ -1,0 +1,236 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&display=swap">
+  <style>
+    body { margin: 0; background: #000000; }
+    a { color: #9C59D1; } a:hover { color: #FCF434; }
+    .lbl { font-family: "IBM Plex Sans Condensed", system-ui, sans-serif; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; }
+    .mono { font-family: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace; font-variant-numeric: tabular-nums; }
+    .num { font-family: "Saira Condensed", "Helvetica Neue", Helvetica, sans-serif; font-weight: 800; font-variant-numeric: tabular-nums; }
+  </style>
+</helmet>
+
+<div style="width: 1280px; height: 480px; box-sizing: border-box; background: #0A0910; color: #F4F2F7; padding: 13px 14px; display: flex; flex-direction: column; gap: 8px; overflow: hidden;">
+
+  <div style="display: flex; align-items: center; justify-content: space-between; height: 20px; flex-shrink: 0;">
+    <div style="display: flex; align-items: baseline; gap: 10px;">
+      <div class="num" style="font-size: 19px; line-height: 1; color: #FFFFFF; letter-spacing: 0.04em;">STATSY</div>
+      <div class="mono" style="font-size: 9.5px; color: #635D73;">SORTED BY SEVERITY</div>
+    </div>
+    <div class="mono" style="font-size: 9.5px; color: #4E4960;">M5 MAX &middot; 128 GB &middot; UP 29d</div>
+  </div>
+
+  <div style="display: flex; gap: 9px; flex: 1; min-height: 0;">
+
+    <div style="flex: 0 0 636px; background: rgba(252, 244, 52, 0.035); border: 1px solid #FCF434; padding: 13px 15px; box-sizing: border-box; display: flex; flex-direction: column; gap: 9px;">
+      <div style="display: flex; align-items: center; gap: 9px;">
+        <div class="lbl" style="font-size: 14px; color: #FCF434;">Memory</div>
+        <div class="lbl" style="font-size: 9px; color: #0A0910; background: #FCF434; padding: 2px 6px 1px;">Pressure</div>
+        <div style="flex: 1;"></div>
+        <div class="mono" style="font-size: 9.5px; color: #7E7A1E;">128 GB INSTALLED</div>
+      </div>
+
+      <div style="display: flex; align-items: flex-end; gap: 12px;">
+        <div style="display: flex; align-items: baseline; gap: 6px;">
+          <div class="num" style="font-size: 112px; line-height: 0.74; color: #FCF434;">86.7</div>
+          <div class="lbl" style="font-size: 22px; color: #7E7A1E;">%</div>
+        </div>
+        <div style="flex: 1;"></div>
+        <div style="text-align: right; padding-bottom: 4px;">
+          <div class="mono" style="font-size: 15px; color: #F4F2F7;">111 / 128 GB</div>
+          <div class="mono" style="font-size: 10.5px; color: #7E7A1E; margin-top: 3px;">ONLY 16 GB UNUSED</div>
+        </div>
+      </div>
+
+      <div>
+        <div style="display: flex; height: 24px; gap: 1px;">
+          <div style="width: 5.5%; background: #FFFFFF; display: flex; align-items: center; justify-content: center;"></div>
+          <div style="width: 10.9%; background: #9C59D1; display: flex; align-items: center; justify-content: center;">
+            <span class="lbl" style="font-size: 8.5px; color: #0A0910;">Cmpr</span>
+          </div>
+          <div style="width: 70.3%; background: #FCF434; display: flex; align-items: center; justify-content: center;">
+            <span class="lbl" style="font-size: 8.5px; color: #0A0910;">App 90 GB</span>
+          </div>
+          <div style="flex: 1; background: #221F2B; display: flex; align-items: center; justify-content: center;">
+            <span class="lbl" style="font-size: 8.5px; color: #635D73;">Free</span>
+          </div>
+        </div>
+        <div class="mono" style="display: flex; gap: 14px; font-size: 9px; color: #635D73; margin-top: 5px;">
+          <span style="color: #FFFFFF;">WIRED 7.1 GB</span><span style="color: #9C59D1;">COMPRESSOR 14 GB</span><span style="color: #FCF434;">APP 90 GB</span><span>FREE 16 GB</span>
+        </div>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 11px;">
+        <div class="lbl" style="font-size: 9.5px; color: #FCF434; width: 40px;">Swap</div>
+        <div style="flex: 1; height: 15px; background: #1E1B26; position: relative;">
+          <div style="width: 89.9%; height: 100%; background: repeating-linear-gradient(90deg, #FCF434 0 4px, #A39D22 4px 8px);"></div>
+        </div>
+        <div class="mono" style="font-size: 11px; color: #FCF434; width: 128px; text-align: right;">11047 / 12288 MB</div>
+      </div>
+
+      <div style="flex: 1; min-height: 0; display: flex; flex-direction: column; border-top: 1px solid rgba(252, 244, 52, 0.25); padding-top: 6px;">
+        <div class="lbl" style="font-size: 8.5px; color: #7E7A1E; margin-bottom: 2px; display: flex; justify-content: space-between;">
+          <span>Largest footprints</span><span>of 735 visible processes</span>
+        </div>
+        <sc-for list="{{ramProcs}}" as="p" hint-placeholder-count="5">
+          <div style="position: relative; height: 27px; display: flex; align-items: center; gap: 9px; padding: 0 7px; box-sizing: border-box;">
+            <div style="position: absolute; left: 0; top: 0; bottom: 0; width: {{p.rel}}%; background: rgba(252, 244, 52, 0.14);"></div>
+            <div class="mono" style="position: relative; font-size: 9.5px; color: #7E7A1E; width: 10px;">{{p.n}}</div>
+            <div class="mono" style="position: relative; flex: 1; min-width: 0; font-size: 12.5px; color: #F4F2F7; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{p.name}}</div>
+            <div class="num" style="position: relative; font-size: 19px; color: #FCF434;">{{p.val}}</div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 9px;">
+
+      <div style="flex: 1; background: #131118; border: 1px solid #2C2C2C; padding: 11px 13px; box-sizing: border-box; display: flex; flex-direction: column; gap: 7px;">
+        <div style="display: flex; align-items: center; gap: 7px;">
+          <div style="width: 6px; height: 6px; background: #9C59D1;"></div>
+          <div class="lbl" style="font-size: 11.5px; color: #9C59D1;">Processor</div>
+          <div style="flex: 1;"></div>
+          <div class="lbl" style="font-size: 8.5px; color: #3C384A; border: 1px solid #2C2C2C; padding: 1px 5px;">Nominal</div>
+        </div>
+        <div style="display: flex; align-items: flex-end; gap: 14px;">
+          <div style="display: flex; align-items: baseline; gap: 5px;">
+            <div class="num" style="font-size: 52px; line-height: 0.76; color: #9C59D1;">30.7</div>
+            <div class="lbl" style="font-size: 13px; color: #635D73;">%</div>
+          </div>
+          <div style="flex: 1; display: flex; align-items: flex-end; gap: 2px; height: 34px;">
+            <sc-for list="{{allCores}}" as="c" hint-placeholder-count="18">
+              <div style="flex: 1; height: 100%; background: #1E1B26; display: flex; align-items: flex-end;">
+                <div style="width: 100%; height: {{c.h}}%; background: {{c.col}};"></div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div class="mono" style="display: flex; justify-content: space-between; font-size: 9.5px; color: #635D73;">
+          <span>LOAD 4.98 &middot; 6.85 &middot; 5.68</span>
+          <span>USR 20.4 &middot; SYS 10.3</span>
+          <span style="color: #FCF434;">PEAK CORE 49%</span>
+        </div>
+        <div style="flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: flex-end; gap: 1px;">
+          <sc-for list="{{cpuProcs}}" as="p" hint-placeholder-count="3">
+            <div style="position: relative; height: 19px; display: flex; align-items: center; gap: 8px; padding: 0 6px; box-sizing: border-box;">
+              <div style="position: absolute; left: 0; top: 0; bottom: 0; width: {{p.rel}}%; background: rgba(156, 89, 209, 0.15);"></div>
+              <div class="mono" style="position: relative; flex: 1; min-width: 0; font-size: 11px; color: #CFC9DC; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{p.name}}</div>
+              <div class="num" style="position: relative; font-size: 14px; color: #9C59D1;">{{p.val}}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="flex: 1; background: #131118; border: 1px solid #2C2C2C; padding: 11px 13px; box-sizing: border-box; display: flex; flex-direction: column; gap: 7px;">
+        <div style="display: flex; align-items: center; gap: 7px;">
+          <div style="width: 6px; height: 6px; background: #FFFFFF;"></div>
+          <div class="lbl" style="font-size: 11.5px; color: #FFFFFF;">Storage</div>
+          <div style="flex: 1;"></div>
+          <div class="lbl" style="font-size: 8.5px; color: #3C384A; border: 1px solid #2C2C2C; padding: 1px 5px;">Nominal</div>
+        </div>
+        <div style="display: flex; align-items: flex-end; gap: 14px;">
+          <div style="display: flex; align-items: baseline; gap: 5px;">
+            <div class="num" style="font-size: 52px; line-height: 0.76; color: #FFFFFF;">71</div>
+            <div class="lbl" style="font-size: 13px; color: #635D73;">%</div>
+          </div>
+          <div style="flex: 1;">
+            <div style="display: flex; height: 10px; gap: 1px; background: #1E1B26;">
+              <div style="width: 71%; background: #FFFFFF;"></div>
+              <div style="flex: 1; background: #221F2B;"></div>
+            </div>
+            <div class="mono" style="display: flex; justify-content: space-between; font-size: 9.5px; color: #635D73; margin-top: 5px;">
+              <span>1.3 TiB USED</span><span style="color: #9E98AE;">535 GiB FREE</span>
+            </div>
+          </div>
+        </div>
+        <div style="flex: 1; min-height: 0; display: flex; align-items: flex-end; gap: 9px;">
+          <div style="flex: 1;">
+            <div class="lbl" style="font-size: 8.5px; color: #4E4960;">Lifetime read</div>
+            <div class="num" style="font-size: 24px; line-height: 1; color: #FFFFFF;">13 <span class="lbl" style="font-size: 10px; color: #635D73;">TB</span></div>
+          </div>
+          <div style="flex: 1;">
+            <div class="lbl" style="font-size: 8.5px; color: #4E4960;">Lifetime write</div>
+            <div class="num" style="font-size: 24px; line-height: 1; color: #C79BEA;">10 <span class="lbl" style="font-size: 10px; color: #635D73;">TB</span></div>
+          </div>
+          <div style="flex: 1.1;">
+            <div class="lbl" style="font-size: 8.5px; color: #4E4960;">Now</div>
+            <div class="mono" style="font-size: 11px; color: #9E98AE; margin-top: 3px;">R 0 B/s</div>
+            <div class="mono" style="font-size: 11px; color: #9E98AE;">W 44 KB/s</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div style="height: 44px; flex-shrink: 0; display: flex; align-items: stretch; gap: 9px;">
+    <div style="flex: 1; background: #131118; border: 1px solid #2C2C2C; box-sizing: border-box; padding: 0 13px; display: flex; align-items: center; gap: 16px;">
+      <sc-for list="{{temps}}" as="t" hint-placeholder-count="5">
+        <div style="flex: 1; min-width: 0; display: flex; align-items: center; gap: 7px;">
+          <div style="width: 3px; height: 24px; background: {{t.col}};"></div>
+          <div style="min-width: 0;">
+            <div class="lbl" style="font-size: 8px; color: #4E4960; white-space: nowrap;">{{t.name}}</div>
+            <div style="display: flex; align-items: baseline; gap: 2px;">
+              <div class="num" style="font-size: 21px; line-height: 1; color: {{t.col}};">{{t.val}}</div>
+              <div class="lbl" style="font-size: 8px; color: #635D73;">&deg;C</div>
+            </div>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+    <div style="flex: 0 0 300px; background: #131118; border: 1px solid #2C2C2C; box-sizing: border-box; padding: 0 13px; display: flex; align-items: center; gap: 16px;">
+      <sc-for list="{{fans}}" as="f" hint-placeholder-count="2">
+        <div style="flex: 1;">
+          <div class="lbl" style="font-size: 8px; color: #4E4960;">{{f.name}}</div>
+          <div style="display: flex; align-items: baseline; gap: 3px;">
+            <div class="num" style="font-size: 21px; line-height: 1; color: #C79BEA;">{{f.rpm}}</div>
+            <div class="lbl" style="font-size: 8px; color: #635D73;">rpm &middot; {{f.pctLabel}}</div>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+
+<script data-dc-script data-props='{"$preview":{"width":1280,"height":480}}'>
+class Component extends DCLogic {
+  tempColor(c) {
+    const t = Math.max(0, Math.min(1, (c - 30) / 60));
+    const a = [156, 89, 209], b = [252, 244, 52];
+    const m = a.map((v, i) => Math.round(v + (b[i] - v) * t));
+    return 'rgb(' + m[0] + ',' + m[1] + ',' + m[2] + ')';
+  }
+  renderVals() {
+    const cores = [26.0, 25.0, 22.2, 13.0, 8.9, 6.0, 0, 0, 0, 0, 0, 0, 14.0, 17.0, 49.0, 13.0, 15.8, 14.0];
+    const cpu = [['Safari', 88.8], ['syspolicyd', 63.7], ['WindowServer', 45.3]];
+    const ram = [
+      ['mlxfast-runtime', 27.0], ['kernel_task', 20.0], ['com.apple.VirtualMemory', 8.0],
+      ['Safari', 7.7], ['com.apple.WebKit', 4.1]
+    ];
+    const temps = [
+      ['CPU cluster', 71.2], ['GPU', 61.5], ['Enclosure', 58.5], ['SSD', 37.8], ['Battery', 32.1]
+    ];
+    return {
+      allCores: cores.map((p) => ({ h: Math.max(p, 3), col: p > 40 ? '#FCF434' : '#9C59D1' })),
+      cpuProcs: cpu.map((p) => ({ name: p[0], val: p[1].toFixed(1), rel: (p[1] / 88.8) * 100 })),
+      ramProcs: ram.map((p, i) => ({ n: i + 1, name: p[0], val: p[1].toFixed(1) + ' GB', rel: (p[1] / 27) * 100 })),
+      temps: temps.map((t) => ({ name: t[0], val: t[1].toFixed(1), col: this.tempColor(t[1]) })),
+      fans: [
+        { name: 'Fan 0', rpm: '1350', pctLabel: '25% OF MAX' },
+        { name: 'Fan 1', rpm: '1461', pctLabel: '25% OF MAX' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

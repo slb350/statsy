@@ -1,0 +1,21 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html",      "title": "A · Instrument", "x": 0,    "y": 0,   "w": 1280, "h": 480 },
+    { "file": "Telemetry.dc.html", "title": "B · Telemetry",  "x": 1400, "y": 0,   "w": 1280, "h": 480 },
+    { "file": "Signal.dc.html",    "title": "C · Signal",     "x": 0,    "y": 640, "w": 1280, "h": 480 },
+    { "file": "Matrix.dc.html",    "title": "D · Matrix",     "x": 1400, "y": 640, "w": 1280, "h": 480 }
+  ],
+  "annotations": [
+    { "id": "note-a", "x": 0, "y": -132, "w": 560,
+      "text": "A · INSTRUMENT — three equal columns, balanced.\nAxis: every metric weighted the same.\nGood: predictable, you learn where things live.\nTradeoff: nothing draws your eye when something is wrong. Right now RAM is at 86.7% with swap nearly full, and this layout whispers it." },
+    { "id": "note-b", "x": 1400, "y": -132, "w": 560,
+      "text": "B · TELEMETRY — trend leads, instant value follows.\nAxis: time over precision.\nAll three traces are real 74-second captures at 1 Hz. Note how differently they behave: CPU ramps and decays, memory drifts inside a 1.6 GB band, disk is pure spikes.\nTradeoff: the process lists get squeezed to fit the charts." },
+    { "id": "note-c", "x": 0, "y": 520, "w": 560,
+      "text": "C · SIGNAL — the layout reorders itself by severity.\nAxis: attention, not symmetry.\nMemory is the problem right now, so it takes the wide panel and the 112px numerals; CPU and storage drop to nominal rails.\nTradeoff: the layout moves as conditions change, so muscle memory never forms. Also needs a threshold policy you have to define." },
+    { "id": "note-d", "x": 1400, "y": 520, "w": 560,
+      "text": "D · MATRIX — maximum density, everything is a grid.\nAxis: information per pixel.\n128 memory cells at one GiB each; 107 real thermal sensors (23 CPU, 84 GPU) shaded across their observed range, not an absolute scale, so genuine 1-3°C spread stays visible.\nTradeoff: reads as texture at a glance, not as numbers. Best if you look closely." },
+    { "id": "note-calibration", "x": 0, "y": 1180, "w": 900,
+      "text": "SIZING — the panel is 1280x480 at backing scale 1.0 over 7 inches, so about 195 PPI with no HiDPI. Type renders at roughly 56% of its usual physical size, which is why body text sits at 11-12px here and hero numerals run 52-112px. Compare A and D: D trades type size for density and is the one to check first on the real screen.\n\nDATA — every number is measured from this machine. Boards A and C use a loaded capture (Safari at 88.8%); B and D use a later idle capture, which is why their headline figures differ. That is deliberate: it shows each layout under two machine states." }
+  ],
+  "launch": { "view": "canvas" }
+}

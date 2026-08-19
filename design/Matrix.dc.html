@@ -1,0 +1,263 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&display=swap">
+  <style>
+    body { margin: 0; background: #000000; }
+    a { color: #9C59D1; } a:hover { color: #FCF434; }
+    .lbl { font-family: "IBM Plex Sans Condensed", system-ui, sans-serif; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; }
+    .mono { font-family: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace; font-variant-numeric: tabular-nums; }
+    .num { font-family: "Saira Condensed", "Helvetica Neue", Helvetica, sans-serif; font-weight: 800; font-variant-numeric: tabular-nums; }
+  </style>
+</helmet>
+
+<div style="width: 1280px; height: 480px; box-sizing: border-box; background: #0A0910; color: #F4F2F7; padding: 12px 14px; display: flex; flex-direction: column; gap: 7px; overflow: hidden;">
+
+  <div style="display: flex; align-items: center; justify-content: space-between; height: 19px; flex-shrink: 0;">
+    <div style="display: flex; align-items: baseline; gap: 10px;">
+      <div class="num" style="font-size: 18px; line-height: 1; color: #FFFFFF; letter-spacing: 0.04em;">STATSY</div>
+      <div class="mono" style="font-size: 9px; color: #635D73;">18 CORES &middot; 128 CELLS &middot; 107 SENSORS</div>
+    </div>
+    <div class="mono" style="font-size: 9px; color: #4E4960;">M5 MAX &middot; macOS 26.5 &middot; 735 / 1058 PROCESSES VISIBLE</div>
+  </div>
+
+  <div style="display: flex; gap: 8px; flex: 1; min-height: 0;">
+
+    <div style="flex: 1; min-width: 0; background: #131118; border: 1px solid #2C2C2C; padding: 10px 11px; box-sizing: border-box; display: flex; flex-direction: column; gap: 7px;">
+      <div style="display: flex; align-items: baseline; gap: 8px;">
+        <div class="lbl" style="font-size: 11px; color: #9C59D1;">Cores</div>
+        <div style="flex: 1;"></div>
+        <div class="num" style="font-size: 26px; line-height: 1; color: #9C59D1;">20.1</div>
+        <div class="lbl" style="font-size: 10px; color: #635D73;">%</div>
+      </div>
+
+      <div>
+        <div class="lbl" style="font-size: 8px; color: #4E4960; margin-bottom: 4px;">Super &middot; 6</div>
+        <div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 3px;">
+          <sc-for list="{{superCores}}" as="c" hint-placeholder-count="6">
+            <div style="position: relative; height: 34px; background: #1B1822; overflow: hidden;">
+              <div style="position: absolute; left: 0; right: 0; bottom: 0; height: {{c.h}}%; background: {{c.bg}};"></div>
+              <div class="num" style="position: relative; text-align: center; font-size: 15px; line-height: 34px; color: {{c.fg}};">{{c.val}}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div>
+        <div class="lbl" style="font-size: 8px; color: #4E4960; margin-bottom: 4px;">Performance &middot; 12</div>
+        <div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 3px;">
+          <sc-for list="{{perfCores}}" as="c" hint-placeholder-count="12">
+            <div style="position: relative; height: 34px; background: #1B1822; overflow: hidden;">
+              <div style="position: absolute; left: 0; right: 0; bottom: 0; height: {{c.h}}%; background: {{c.bg}};"></div>
+              <div class="num" style="position: relative; text-align: center; font-size: 15px; line-height: 34px; color: {{c.fg}};">{{c.val}}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: flex-end; border-top: 1px solid #2C2C2C; padding-top: 5px;">
+        <div class="lbl" style="font-size: 8px; color: #4E4960; margin-bottom: 2px; display: flex; justify-content: space-between;">
+          <span>Top</span><span>% of one core</span>
+        </div>
+        <sc-for list="{{cpuProcs}}" as="p" hint-placeholder-count="4">
+          <div style="position: relative; height: 19px; display: flex; align-items: center; gap: 6px; padding: 0 5px; box-sizing: border-box;">
+            <div style="position: absolute; left: 0; top: 0; bottom: 0; width: {{p.rel}}%; background: rgba(156, 89, 209, 0.15);"></div>
+            <div class="mono" style="position: relative; flex: 1; min-width: 0; font-size: 10.5px; color: #CFC9DC; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{p.name}}</div>
+            <div class="num" style="position: relative; font-size: 14px; color: #9C59D1;">{{p.val}}</div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="flex: 1; min-width: 0; background: #131118; border: 1px solid #2C2C2C; padding: 10px 11px; box-sizing: border-box; display: flex; flex-direction: column; gap: 7px;">
+      <div style="display: flex; align-items: baseline; gap: 8px;">
+        <div class="lbl" style="font-size: 11px; color: #FCF434;">Memory</div>
+        <div style="flex: 1;"></div>
+        <div class="num" style="font-size: 26px; line-height: 1; color: #FCF434;">114</div>
+        <div class="lbl" style="font-size: 10px; color: #635D73;">/ 128 GiB</div>
+      </div>
+
+      <div>
+        <div class="lbl" style="font-size: 8px; color: #4E4960; margin-bottom: 4px;">One cell = one gibibyte</div>
+        <div style="display: grid; grid-template-columns: repeat(16, minmax(0, 1fr)); gap: 2px;">
+          <sc-for list="{{memCells}}" as="m" hint-placeholder-count="128">
+            <div style="height: 13px; background: {{m.col}};"></div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div class="mono" style="display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 8.5px; color: #635D73;">
+        <span style="color: #FFFFFF;">&#9632; WIRED 7</span>
+        <span style="color: #9C59D1;">&#9632; COMPRESSOR 14</span>
+        <span style="color: #FCF434;">&#9632; ACTIVE 49</span>
+        <span style="color: #8E8A24;">&#9632; INACTIVE 45</span>
+        <span>&#9632; FREE 13</span>
+      </div>
+
+      <div>
+        <div class="lbl" style="font-size: 8px; color: #4E4960; margin-bottom: 3px; display: flex; justify-content: space-between;">
+          <span>Swap</span><span style="color: #FCF434;">11047 / 12288 MB</span>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(48, minmax(0, 1fr)); gap: 1px;">
+          <sc-for list="{{swapCells}}" as="s" hint-placeholder-count="48">
+            <div style="height: 10px; background: {{s.col}};"></div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: flex-end; border-top: 1px solid #2C2C2C; padding-top: 5px;">
+        <div class="lbl" style="font-size: 8px; color: #4E4960; margin-bottom: 2px; display: flex; justify-content: space-between;">
+          <span>Top</span><span>footprint</span>
+        </div>
+        <sc-for list="{{ramProcs}}" as="p" hint-placeholder-count="4">
+          <div style="position: relative; height: 19px; display: flex; align-items: center; gap: 6px; padding: 0 5px; box-sizing: border-box;">
+            <div style="position: absolute; left: 0; top: 0; bottom: 0; width: {{p.rel}}%; background: rgba(252, 244, 52, 0.13);"></div>
+            <div class="mono" style="position: relative; flex: 1; min-width: 0; font-size: 10.5px; color: #CFC9DC; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{p.name}}</div>
+            <div class="num" style="position: relative; font-size: 14px; color: #FCF434;">{{p.val}}</div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="flex: 1.16; min-width: 0; background: #131118; border: 1px solid #2C2C2C; padding: 10px 11px; box-sizing: border-box; display: flex; flex-direction: column; gap: 7px;">
+      <div style="display: flex; align-items: baseline; gap: 8px;">
+        <div class="lbl" style="font-size: 11px; color: #FFFFFF;">Thermal array</div>
+        <div style="flex: 1;"></div>
+        <div class="mono" style="font-size: 8.5px; color: #4E4960;">SHADED ACROSS OBSERVED RANGE</div>
+      </div>
+
+      <div>
+        <div class="lbl" style="font-size: 8px; color: #4E4960; margin-bottom: 4px; display: flex; justify-content: space-between;">
+          <span>CPU &middot; 23 sensors</span><span class="mono" style="letter-spacing: 0;">57.6 &ndash; 60.8 &deg;C &middot; AVG 59.2</span>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(23, minmax(0, 1fr)); gap: 2px;">
+          <sc-for list="{{cpuSensors}}" as="s" hint-placeholder-count="23">
+            <div style="height: 22px; background: {{s.col}};"></div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div>
+        <div class="lbl" style="font-size: 8px; color: #4E4960; margin-bottom: 4px; display: flex; justify-content: space-between;">
+          <span>GPU &middot; 84 sensors</span><span class="mono" style="letter-spacing: 0;">57.2 &ndash; 58.4 &deg;C &middot; AVG 57.7</span>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(21, minmax(0, 1fr)); gap: 2px;">
+          <sc-for list="{{gpuSensors}}" as="s" hint-placeholder-count="84">
+            <div style="height: 15px; background: {{s.col}};"></div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 9px; border-top: 1px solid #2C2C2C; padding-top: 6px;">
+        <div style="flex: 1;">
+          <div class="lbl" style="font-size: 8px; color: #4E4960;">Storage</div>
+          <div style="display: flex; align-items: baseline; gap: 4px;">
+            <div class="num" style="font-size: 30px; line-height: 1; color: #FFFFFF;">71</div>
+            <div class="lbl" style="font-size: 9px; color: #635D73;">%</div>
+          </div>
+          <div style="display: flex; height: 6px; gap: 1px; background: #1E1B26; margin-top: 4px;">
+            <div style="width: 71%; background: #FFFFFF;"></div>
+            <div style="flex: 1; background: #221F2B;"></div>
+          </div>
+          <div class="mono" style="font-size: 8.5px; color: #635D73; margin-top: 4px;">1.3 / 1.8 TiB &middot; 535 GiB FREE</div>
+        </div>
+        <div style="width: 1px; background: #2C2C2C;"></div>
+        <div style="flex: 1.1;">
+          <div class="lbl" style="font-size: 8px; color: #4E4960; margin-bottom: 3px;">Fans</div>
+          <sc-for list="{{fans}}" as="f" hint-placeholder-count="2">
+            <div style="display: flex; align-items: center; gap: 6px; height: 17px;">
+              <div class="mono" style="font-size: 9px; color: #635D73; width: 30px;">{{f.name}}</div>
+              <div style="flex: 1; height: 5px; background: #1E1B26;">
+                <div style="width: {{f.pct}}%; height: 100%; background: #9C59D1;"></div>
+              </div>
+              <div class="num" style="font-size: 13px; color: #C79BEA; width: 34px; text-align: right;">{{f.rpm}}</div>
+            </div>
+          </sc-for>
+          <div class="mono" style="font-size: 8.5px; color: #4E4960; margin-top: 3px;">BOTH AT 25% OF MAXIMUM</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div style="height: 40px; flex-shrink: 0; background: #131118; border: 1px solid #2C2C2C; box-sizing: border-box; padding: 0 13px; display: flex; align-items: center; gap: 18px;">
+    <sc-for list="{{temps}}" as="t" hint-placeholder-count="5">
+      <div style="flex: 1; min-width: 0; display: flex; align-items: baseline; gap: 6px;">
+        <div class="lbl" style="font-size: 8px; color: #4E4960; white-space: nowrap;">{{t.name}}</div>
+        <div style="flex: 1;"></div>
+        <div class="num" style="font-size: 19px; line-height: 1; color: {{t.col}};">{{t.val}}</div>
+        <div class="lbl" style="font-size: 8px; color: #635D73;">&deg;C</div>
+      </div>
+    </sc-for>
+    <div style="width: 1px; height: 22px; background: #2C2C2C;"></div>
+    <div style="flex: 1.1; min-width: 0; display: flex; align-items: baseline; gap: 6px;">
+      <div class="lbl" style="font-size: 8px; color: #4E4960;">Net lifetime</div>
+      <div style="flex: 1;"></div>
+      <div class="mono" style="font-size: 11px; color: #9E98AE;">58 GB IN &middot; 38 GB OUT</div>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+
+<script data-dc-script data-props='{"$preview":{"width":1280,"height":480}}'>
+class Component extends DCLogic {
+  ramp(t) {
+    const a = [156, 89, 209], b = [252, 244, 52];
+    const m = a.map((v, i) => Math.round(v + (b[i] - v) * Math.max(0, Math.min(1, t))));
+    return 'rgb(' + m[0] + ',' + m[1] + ',' + m[2] + ')';
+  }
+  band(vals) {
+    const lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals);
+    const span = hi - lo || 1;
+    return vals.map((v) => ({ col: this.ramp((v - lo) / span) }));
+  }
+  core(pct) {
+    const hot = pct > 35;
+    return {
+      val: Math.round(pct), h: Math.max(pct, 2),
+      bg: hot ? 'rgba(252, 244, 52, 0.75)' : 'rgba(156, 89, 209, 0.7)',
+      fg: pct > 60 ? '#0A0910' : '#F4F2F7'
+    };
+  }
+  renderVals() {
+    const cpuS = [60.4, 59.3, 58.9, 60.4, 59.7, 58.9, 60.3, 59.4, 59.3, 60.8, 60.3, 60.0, 58.5, 58.7, 59.0, 58.8, 59.2, 59.0, 57.6, 58.6, 58.8, 58.6, 57.9];
+    const gpuS = [58.3, 58.3, 58.3, 58.3, 58.3, 58.3, 58.3, 58.3, 58.3, 58.3, 58.3, 58.3, 58.3, 58.4, 58.3, 58.3, 58.3, 58.3, 58.3, 58.3, 57.5, 57.5, 57.5, 57.5, 57.5, 57.5, 57.5, 57.5, 57.5, 57.5, 57.5, 57.5, 57.5, 57.5, 57.5, 57.5, 57.5, 57.5, 57.5, 57.5, 57.5, 57.4, 57.3, 57.3, 57.3, 57.3, 57.2, 57.2, 57.3, 57.2, 57.3, 57.2, 57.3, 57.3, 57.2, 57.4, 57.3, 57.3, 57.3, 57.3, 57.3, 57.3, 57.4, 57.8, 57.9, 57.9, 57.9, 57.8, 57.8, 57.8, 57.8, 57.8, 57.8, 57.8, 57.9, 57.8, 57.9, 57.9, 57.9, 57.8, 57.8, 57.9, 57.8, 57.4];
+
+    const mem = [[7, '#FFFFFF'], [14, '#9C59D1'], [49, '#FCF434'], [45, '#8E8A24'], [13, '#221F2B']];
+    const memCells = [];
+    mem.forEach((g) => { for (let i = 0; i < g[0]; i++) memCells.push({ col: g[1] }); });
+
+    const swapCells = [];
+    for (let i = 0; i < 48; i++) swapCells.push({ col: i < 43 ? '#FCF434' : '#221F2B' });
+
+    const cpuP = [['Safari', 88.2], ['WindowServer', 39.4], ['kernel_task', 14.7], ['sysmond', 10.7]];
+    const ramP = [['mlxfast-runtime', 27.0], ['kernel_task', 20.0], ['com.apple.VirtualMemory', 8.0], ['Safari', 7.7]];
+    const temps = [['CPU', 59.2], ['GPU', 57.7], ['Enclosure', 58.5], ['SSD', 37.8], ['Battery', 32.1]];
+
+    return {
+      superCores: [1.0, 1.0, 1.0, 0.0, 1.0, 0.0].map((p) => this.core(p)),
+      perfCores: [29.0, 26.7, 23.0, 19.8, 14.0, 11.0, 38.0, 38.0, 39.6, 40.2, 39.0, 39.6].map((p) => this.core(p)),
+      memCells: memCells,
+      swapCells: swapCells,
+      cpuSensors: this.band(cpuS),
+      gpuSensors: this.band(gpuS),
+      cpuProcs: cpuP.map((p) => ({ name: p[0], val: p[1].toFixed(1), rel: (p[1] / 88.2) * 100 })),
+      ramProcs: ramP.map((p) => ({ name: p[0], val: p[1].toFixed(1) + ' GB', rel: (p[1] / 27) * 100 })),
+      temps: temps.map((t) => ({ name: t[0], val: t[1].toFixed(1), col: this.ramp((t[1] - 30) / 60) })),
+      fans: [
+        { name: 'F0', rpm: '1350', pct: (1350 / 5349) * 100 },
+        { name: 'F1', rpm: '1461', pct: (1461 / 5777) * 100 }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>
