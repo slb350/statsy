@@ -1,18 +1,17 @@
 # Statsy
 
-A system monitor for a small secondary display. It fills a 1280x480 panel with
-CPU, memory and storage, each above its five heaviest processes, over a strip of
-temperature and fan readings.
+A system monitor for a small secondary display: CPU, memory and storage, each
+above its five heaviest processes, over a strip of temperature and fan readings.
 
-![Statsy running on a 7-inch panel](docs/images/panel.png)
+![Statsy on a mostly idle machine](docs/images/panel.png)
 
-The target is a 7-inch 1280x480 panel at 1:1 scale with no HiDPI backing. At
-roughly 195 PPI that makes text render at about 56% of its usual physical size,
-which is why the type is larger than it would be in a normal app.
+It targets a 7-inch 1280x480 panel running at 1:1 scale with no HiDPI backing.
+At roughly 195 PPI text renders at about 56% of its usual physical size, which
+is why the type is larger than it would be in a normal app.
 
-Under load, with the core grid saturated and three-digit process figures:
+The same panel with all 18 cores saturated and a load average of 44:
 
-![Statsy under load](docs/images/panel-under-load.png)
+![Statsy with the machine under full load](docs/images/panel-under-load.png)
 
 ## Running
 
