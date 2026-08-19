@@ -23,8 +23,8 @@ open .build/Statsy.app
 
 Statsy has no Dock icon and no menu bar entry. It puts a borderless window on
 whichever display measures 1280x480 and re-seats itself when the display
-arrangement changes. With no such display attached it falls back to any external
-screen, then to whatever is available.
+arrangement changes, falling back to any external display when that panel is
+not attached.
 
 To check the sampling layer without the UI:
 
@@ -52,9 +52,7 @@ That prints one snapshot in a form you can compare directly against `top`, `df`,
 | Processes | a streamed `/usr/bin/top` |
 | Uptime | `kern.boottime` |
 
-Five of those are not the obvious API, because the obvious API is wrong. Each
-was caught by comparing output against the system tool rather than by reading
-documentation.
+Five of those are not the obvious API, because the obvious API is wrong.
 
 Memory used has to include inactive pages. Summing active, wired and compressed
 gives 69 GB on a machine where `top` reports 114 GB, and the missing 44 GB is
@@ -64,8 +62,7 @@ Process ranking needs `top` because unprivileged libproc cannot see other users'
 processes. `proc_pidinfo` and `proc_pid_rusage` return EPERM for about 180 of
 1050 processes here, including WindowServer and kernel_task, which are often the
 largest consumers. `ps` is no substitute, since its `%CPU` column is a lifetime
-average rather than an interval delta. `top`'s own first sample block has the
-same problem and gets discarded.
+average rather than an interval delta.
 
 The SMC request struct has to be exactly 80 bytes. Swift packs later fields into
 a nested struct's tail padding, producing a 76-byte request that the SMC answers
@@ -88,14 +85,12 @@ its `top` child. Temperatures sample every five seconds instead: reading all 130
 SMC sensors takes 17 ms of blocked hardware wait, and they move far more slowly
 than that.
 
-## Layout and palette
+## Palette
 
-Three columns over a sensor ribbon at a fixed 1280x480. The colours are the
-nonbinary pride flag, with purple for CPU, yellow for memory and white for
-storage against a near-black ground. Temperatures ride a purple-to-yellow ramp
-between 30 and 90 degrees.
+The colours are the nonbinary pride flag: purple for CPU, yellow for memory,
+white for storage, against a near-black ground. Temperatures ride a
+purple-to-yellow ramp between 30 and 90 degrees.
 
 ## Requirements
 
-macOS 14 or later, built and run on 26.5 with Swift 6. The app is not sandboxed,
-because App Sandbox blocks the process enumeration it depends on.
+macOS 14 or later, Swift 6. Built and run on 26.5.
