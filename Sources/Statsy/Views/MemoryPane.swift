@@ -13,10 +13,10 @@ struct MemoryPane: View {
             meta: "\(Format.gibibytes(memory.total)) GB"
         ) {
             HeroNumber(
-                value: Format.percent(memory.usedFraction),
+                value: Format.percent(memory.inUseFraction),
                 color: Theme.yellow,
-                captionLabel: "Used",
-                caption: "\(Format.gibibytes(memory.used)) / \(Format.gibibytes(memory.total)) GB"
+                captionLabel: "In use",
+                caption: "\(Format.gibibytes(memory.inUse)) / \(Format.gibibytes(memory.total)) GB"
             )
 
             VStack(alignment: .leading, spacing: 4) {
@@ -24,7 +24,7 @@ struct MemoryPane: View {
                     .init(fraction: share(memory.wired), color: Theme.channelWhite),
                     .init(fraction: share(memory.compressed), color: Theme.purple),
                     .init(fraction: share(memory.active), color: Theme.yellow),
-                    .init(fraction: share(memory.inactive), color: Theme.yellowDim),
+                    .init(fraction: share(memory.reclaimable), color: Theme.yellowDim)
                 ])
                 HStack(spacing: 0) {
                     legend("WIRE", memory.wired, Theme.channelWhite)
@@ -33,9 +33,9 @@ struct MemoryPane: View {
                     Spacer(minLength: 2)
                     legend("ACTV", memory.active, Theme.yellow)
                     Spacer(minLength: 2)
-                    legend("INAC", memory.inactive, Theme.yellowDim)
+                    legend("RECL", memory.reclaimable, Theme.yellowDim)
                     Spacer(minLength: 2)
-                    legend("FREE", memory.unused, Theme.textTertiary)
+                    legend("FREE", memory.free, Theme.textTertiary)
                 }
                 .font(Theme.mono(9))
             }

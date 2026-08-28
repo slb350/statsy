@@ -27,7 +27,7 @@ struct ThermalCalculatorTests {
         // The 23 Tp sensors as captured from this machine.
         let readings = [
             60.4, 59.3, 58.9, 60.4, 59.7, 58.9, 60.3, 59.4, 59.3, 60.8, 60.3, 60.0,
-            58.5, 58.7, 59.0, 58.8, 59.2, 59.0, 57.6, 58.6, 58.8, 58.6, 57.9,
+            58.5, 58.7, 59.0, 58.8, 59.2, 59.0, 57.6, 58.6, 58.8, 58.6, 57.9
         ]
         let sensors = readings.enumerated().map {
             ThermalSensor(key: "Tp0\($0.offset)", celsius: $0.element)
@@ -44,7 +44,7 @@ struct ThermalCalculatorTests {
         let sensors = [
             ThermalSensor(key: "Tp01", celsius: 70),
             ThermalSensor(key: "Tp02", celsius: 72),
-            ThermalSensor(key: "Tg01", celsius: 60),
+            ThermalSensor(key: "Tg01", celsius: 60)
         ]
         let metrics = ThermalCalculator.metrics(sensors)
         #expect(metrics[.cpu]?.average == 71)
@@ -59,7 +59,7 @@ struct ThermalCalculatorTests {
         let sensors = [
             ThermalSensor(key: "Tp01", celsius: 70),
             ThermalSensor(key: "Tp02", celsius: 0),
-            ThermalSensor(key: "Tp03", celsius: 4000),
+            ThermalSensor(key: "Tp03", celsius: 4000)
         ]
         let cpu = try #require(ThermalCalculator.metrics(sensors)[.cpu])
         #expect(cpu.count == 1)

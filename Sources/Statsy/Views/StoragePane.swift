@@ -21,7 +21,7 @@ struct StoragePane: View {
 
             VStack(alignment: .leading, spacing: 4) {
                 SegmentedBar(segments: [
-                    .init(fraction: storage.usedFraction, color: Theme.channelWhite),
+                    .init(fraction: storage.usedFraction, color: Theme.channelWhite)
                 ])
                 HStack {
                     Text("USED \(Format.binary(storage.used))").foregroundStyle(Theme.channelWhite)
@@ -89,7 +89,6 @@ struct StoragePane: View {
     private var lifetimeTotal: String {
         Format.binary(storage.lifetimeRead + storage.lifetimeWritten) + " total"
     }
-
 
     private func lifetimeCell(
         _ text: String, tint: Color, text textColor: Color

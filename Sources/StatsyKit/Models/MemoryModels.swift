@@ -26,45 +26,47 @@ public struct VMCounters: Sendable, Equatable {
 
 public struct MemoryMetrics: Sendable, Equatable {
     public let total: UInt64
-    public let used: UInt64
+    public let inUse: UInt64
     public let wired: UInt64
     public let compressed: UInt64
     public let active: UInt64
-    public let inactive: UInt64
-    public let unused: UInt64
+    public let reclaimable: UInt64
+    public let free: UInt64
     public let swapUsed: UInt64
     public let swapTotal: UInt64
 
-    public var usedFraction: Double { total == 0 ? 0 : Double(used) / Double(total) }
+    public var inUseFraction: Double { total == 0 ? 0 : Double(inUse) / Double(total) }
     public var swapFraction: Double { swapTotal == 0 ? 0 : Double(swapUsed) / Double(swapTotal) }
 
     public init(
-        total: UInt64, used: UInt64, wired: UInt64, compressed: UInt64,
-        active: UInt64, inactive: UInt64, unused: UInt64,
+        total: UInt64, inUse: UInt64, wired: UInt64, compressed: UInt64,
+        active: UInt64, reclaimable: UInt64, free: UInt64,
         swapUsed: UInt64, swapTotal: UInt64
     ) {
         self.total = total
-        self.used = used
+        self.inUse = inUse
         self.wired = wired
         self.compressed = compressed
         self.active = active
-        self.inactive = inactive
-        self.unused = unused
+        self.reclaimable = reclaimable
+        self.free = free
         self.swapUsed = swapUsed
         self.swapTotal = swapTotal
     }
 
     public static let zero = MemoryMetrics(
-        total: 0, used: 0, wired: 0, compressed: 0, active: 0,
-        inactive: 0, unused: 0, swapUsed: 0, swapTotal: 0
+        total: 0, inUse: 0, wired: 0, compressed: 0, active: 0,
+        reclaimable: 0, free: 0, swapUsed: 0, swapTotal: 0
     )
 }
 
 public enum MemoryCalculator {
-    /// Converts page counts into byte totals matching Activity Monitor.
+    /// Converts page counts into byte totals for Statsy's pressure-oriented display.
     ///
-    /// "Memory Used" is active + inactive + wired + compressed — everything but
-    /// free and speculative. Omitting inactive under-reports by tens of GB.
+    /// "In use" is active + wired + compressed. Inactive pages are kept as a
+    /// separate reclaimable bucket so inactive memory does not inflate the
+    /// headline percentage. These VM buckets can fall slightly short of
+    /// installed RAM, so the three displayed categories are not forced to sum.
     public static func metrics(
         _ counters: VMCounters,
         totalBytes: UInt64,
@@ -79,12 +81,12 @@ public enum MemoryCalculator {
 
         return MemoryMetrics(
             total: totalBytes,
-            used: active + inactive + wired + compressed,
+            inUse: active + wired + compressed,
             wired: wired,
             compressed: compressed,
             active: active,
-            inactive: inactive,
-            unused: (counters.free + counters.speculative) * page,
+            reclaimable: inactive,
+            free: (counters.free + counters.speculative) * page,
             swapUsed: swapUsed,
             swapTotal: swapTotal
         )

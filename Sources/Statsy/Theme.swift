@@ -46,11 +46,11 @@ enum Theme {
     /// 30C reads as purple and 90C as yellow, which keeps idle sensors calm and
     /// makes a hot cluster unmistakable.
     static func temperature(_ celsius: Double) -> Color {
-        let t = temperatureFraction(celsius)
+        let fraction = temperatureFraction(celsius)
         return Color(
-            red: (0x9C + (0xFC - 0x9C) * t) / 255,
-            green: (0x59 + (0xF4 - 0x59) * t) / 255,
-            blue: (0xD1 + (0x34 - 0xD1) * t) / 255
+            red: (0x9C + (0xFC - 0x9C) * fraction) / 255,
+            green: (0x59 + (0xF4 - 0x59) * fraction) / 255,
+            blue: (0xD1 + (0x34 - 0xD1) * fraction) / 255
         )
     }
 

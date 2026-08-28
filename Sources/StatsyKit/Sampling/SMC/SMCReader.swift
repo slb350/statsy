@@ -13,9 +13,15 @@ public final class SMCReader {
         let info: SMCKeyData.KeyInfo
     }
 
+    private struct FanKey {
+        let index: Int
+        let actual: SensorKey
+        let maximum: SensorKey
+    }
+
     private let connection: SMCConnection
     private let sensorKeys: [SensorKey]
-    private let fanKeys: [(index: Int, actual: SensorKey, maximum: SensorKey)]
+    private let fanKeys: [FanKey]
 
     public init?() {
         // The request layout is only correct at this exact size; if a future
@@ -67,7 +73,7 @@ public final class SMCReader {
         }
     }
 
-    private static func discoverFans(_ connection: SMCConnection) -> [(Int, SensorKey, SensorKey)] {
+    private static func discoverFans(_ connection: SMCConnection) -> [FanKey] {
         guard let count = value(connection, key: "FNum") else { return [] }
 
         return (0..<Int(count)).compactMap { index in
@@ -76,10 +82,10 @@ public final class SMCReader {
             guard let actualInfo = keyInfo(connection, code: actualCode),
                   let maximumInfo = keyInfo(connection, code: maximumCode)
             else { return nil }
-            return (
-                index,
-                SensorKey(code: actualCode, name: "F\(index)Ac", info: actualInfo),
-                SensorKey(code: maximumCode, name: "F\(index)Mx", info: maximumInfo)
+            return FanKey(
+                index: index,
+                actual: SensorKey(code: actualCode, name: "F\(index)Ac", info: actualInfo),
+                maximum: SensorKey(code: maximumCode, name: "F\(index)Mx", info: maximumInfo)
             )
         }
     }
@@ -128,22 +134,17 @@ enum SMCDecoder {
         guard size > 0, size <= payload.count else { return nil }
 
         switch FourCharCode.decode(info.dataType) {
-        case "flt ":
-            guard size == 4 else { return nil }
+        case "flt " where size == 4:
             return Double(Float(bitPattern: littleEndian32(payload)))
-        case "sp78":
-            guard size == 2 else { return nil }
+        case "sp78" where size == 2:
             return Double(Int16(bitPattern: bigEndian16(payload))) / 256
-        case "fpe2":
-            guard size == 2 else { return nil }
+        case "fpe2" where size == 2:
             return Double(bigEndian16(payload)) / 4
         case "ui8 ":
             return Double(payload[0])
-        case "ui16":
-            guard size == 2 else { return nil }
+        case "ui16" where size == 2:
             return Double(bigEndian16(payload))
-        case "ui32":
-            guard size == 4 else { return nil }
+        case "ui32" where size == 4:
             return Double(bigEndian32(payload))
         default:
             return nil

@@ -12,7 +12,9 @@ struct SMCLayoutTests {
         #expect(MemoryLayout<SMCKeyData>.size == 80)
         #expect(MemoryLayout<SMCKeyData.Version>.size == 6)
         #expect(MemoryLayout<SMCKeyData.PLimitData>.size == 16)
+        #expect(MemoryLayout<SMCKeyData.KeyInfo>.size == 12)
         #expect(MemoryLayout<SMCKeyData.KeyInfo>.stride == 12)
+        #expect(MemoryLayout<SMCKeyData.PayloadBytes>.size == SMCKeyData.payloadSize)
         #expect(MemoryLayout.offset(of: \SMCKeyData.bytes) == SMCKeyData.payloadOffset)
     }
 

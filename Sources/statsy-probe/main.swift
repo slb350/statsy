@@ -9,9 +9,22 @@ try? await Task.sleep(for: .seconds(1))
 let snapshot = await engine.sample()
 
 print("machine   \(snapshot.machine.summary)  \(snapshot.uptimeDescription)")
-print("cpu       \(Format.percent(snapshot.cpu.busy))%  usr \(Format.percent(snapshot.cpu.user))  sys \(Format.percent(snapshot.cpu.system))")
-print("memory    \(Format.gibibytes(snapshot.memory.used)) / \(Format.gibibytes(snapshot.memory.total)) GiB  swap \(Format.percent(snapshot.memory.swapFraction))%")
-print("storage   \(Format.percent(snapshot.storage.usedFraction, decimals: 0))%  free \(Format.binary(snapshot.storage.free))")
+let cpuBusy = Format.percent(snapshot.cpu.busy)
+let cpuUser = Format.percent(snapshot.cpu.user)
+let cpuSystem = Format.percent(snapshot.cpu.system)
+print("cpu       \(cpuBusy)%  usr \(cpuUser)  sys \(cpuSystem)")
+
+let memoryInUse = Format.gibibytes(snapshot.memory.inUse)
+let memoryTotal = Format.gibibytes(snapshot.memory.total)
+let memoryReclaimable = Format.gibibytes(snapshot.memory.reclaimable)
+let swapPercent = Format.percent(snapshot.memory.swapFraction)
+let memorySummary = "in use \(memoryInUse) / \(memoryTotal) GiB  "
+    + "reclaimable \(memoryReclaimable) GiB  swap \(swapPercent)%"
+print("memory    \(memorySummary)")
+
+let storageUsed = Format.percent(snapshot.storage.usedFraction, decimals: 0)
+let storageFree = Format.binary(snapshot.storage.free)
+print("storage   \(storageUsed)%  free \(storageFree)")
 for volume in snapshot.storage.volumes {
     print("  \(volume.name.padding(toLength: 8, withPad: " ", startingAt: 0))\(Format.binary(volume.used))")
 }

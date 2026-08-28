@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-08-28 — pressure-oriented memory headline
+
+- Changed the hero percentage from `top`-style used memory to **in use** memory
+  (active + wired + compressed), so inactive memory no longer makes a healthy
+  machine look nearly exhausted.
+- Kept inactive pages visible as a separate `RECL` segment and renamed the
+  underlying metrics to encode the distinction between in-use, reclaimable,
+  and free memory.
+- Updated `statsy-probe` to print both in-use and reclaimable memory. Live host
+  verification reported 67 / 128 GiB in use with 58 GiB reclaimable.
+
 ## 2026-08-18 — initial build
 
 Panel app for the 7-inch 1280x480 secondary display, built to the "Instrument"

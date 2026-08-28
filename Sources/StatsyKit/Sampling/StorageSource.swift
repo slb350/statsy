@@ -9,17 +9,23 @@ import IOKit
 /// one-second window almost nothing is doing disk I/O anyway, so a top-five
 /// list would be empty nearly always.
 public struct StorageSource: Sendable {
+    private struct VolumeSpec {
+        let role: VolumeRole
+        let name: String
+        let path: String
+    }
+
     /// Volumes to report, in display order.
-    private static let volumes: [(role: VolumeRole, name: String, path: String)] = [
-        (.data, "Data", "/System/Volumes/Data"),
-        (.swap, "VM", "/System/Volumes/VM"),
-        (.system, "System", "/"),
+    private static let volumes = [
+        VolumeSpec(role: .data, name: "Data", path: "/System/Volumes/Data"),
+        VolumeSpec(role: .swap, name: "VM", path: "/System/Volumes/VM"),
+        VolumeSpec(role: .system, name: "System", path: "/")
     ]
 
     public init() {}
 
     /// Capacity of the data volume plus a per-volume breakdown.
-    public func capacity() -> (total: UInt64, used: UInt64, free: UInt64, volumes: [VolumeUsage]) {
+    public func capacity() -> StorageCapacity {
         let mounts = mountedFilesystems()
         var volumes: [VolumeUsage] = []
         var total: UInt64 = 0
@@ -48,7 +54,7 @@ public struct StorageSource: Sendable {
                 free = stats.f_bavail * blockSize
             }
         }
-        return (total, used, free, volumes)
+        return StorageCapacity(total: total, used: used, free: free, volumes: volumes)
     }
 
     /// Lifetime bytes read and written, summed across block storage drivers.
@@ -120,7 +126,7 @@ public struct StorageSource: Sendable {
         for index in 0..<Int(count) {
             var entry = buffer[index]
             let path = withUnsafeBytes(of: &entry.f_mntonname) { raw in
-                String(decoding: raw.prefix { $0 != 0 }, as: UTF8.self)
+                String(bytes: raw.prefix { $0 != 0 }, encoding: .utf8) ?? ""
             }
             result[path] = entry
         }

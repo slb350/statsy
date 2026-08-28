@@ -25,7 +25,7 @@ public enum Format {
         return "\(decimal(value, decimals: unit == 0 ? 0 : decimals)) \(binaryUnits[unit])"
     }
 
-    /// Whole gibibytes, as the panel shows memory ("111 / 128 GB").
+    /// Whole gibibytes, as the panel shows memory ("70 / 128 GB").
     public static func gibibytes(_ bytes: UInt64) -> String {
         decimal(Double(bytes) / 1_073_741_824, decimals: 0)
     }

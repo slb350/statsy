@@ -21,8 +21,6 @@ public struct MachineSource: Sendable {
         return "\(version.majorVersion).\(version.minorVersion)"
     }
 
-
-
     /// GPU core count, published by the accelerator in the IO registry.
     private func gpuCoreCount() -> Int? {
         guard let matching = IOServiceMatching("AGXAccelerator") else { return nil }

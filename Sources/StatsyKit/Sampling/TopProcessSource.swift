@@ -42,7 +42,7 @@ public actor TopProcessSource: ProcessSource {
         // list, not just the head of the CPU ordering.
         task.arguments = [
             "-l", "0", "-s", "\(interval)",
-            "-stats", "pid,command,cpu,mem", "-n", "9999",
+            "-stats", "pid,command,cpu,mem", "-n", "9999"
         ]
 
         let pipe = Pipe()

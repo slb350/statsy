@@ -9,11 +9,11 @@ struct CPUCalculatorTests {
     func derivesUtilisation() {
         let previous = [
             CPUTicks(user: 100, system: 50, idle: 850, nice: 0),
-            CPUTicks(user: 0, system: 0, idle: 0, nice: 0),
+            CPUTicks(user: 0, system: 0, idle: 0, nice: 0)
         ]
         let current = [
             CPUTicks(user: 200, system: 100, idle: 1700, nice: 0),
-            CPUTicks(user: 500, system: 0, idle: 500, nice: 0),
+            CPUTicks(user: 500, system: 0, idle: 500, nice: 0)
         ]
         let metrics = CPUCalculator.metrics(previous: previous, current: current, loadAverage: load)
 
@@ -57,7 +57,7 @@ struct CPUCalculatorTests {
         let previous = [CPUTicks(user: 0, system: 0, idle: 0, nice: 0)]
         let current = [
             CPUTicks(user: 1, system: 1, idle: 1, nice: 0),
-            CPUTicks(user: 1, system: 1, idle: 1, nice: 0),
+            CPUTicks(user: 1, system: 1, idle: 1, nice: 0)
         ]
         let metrics = CPUCalculator.metrics(previous: previous, current: current, loadAverage: load)
         #expect(metrics.cores.isEmpty)

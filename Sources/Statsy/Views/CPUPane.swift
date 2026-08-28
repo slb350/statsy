@@ -18,7 +18,7 @@ struct CPUPane: View {
             VStack(alignment: .leading, spacing: 4) {
                 SegmentedBar(segments: [
                     .init(fraction: cpu.user, color: Theme.purple),
-                    .init(fraction: cpu.system, color: Theme.yellow),
+                    .init(fraction: cpu.system, color: Theme.yellow)
                 ])
                 HStack {
                     Text("USR \(Format.percent(cpu.user))").foregroundStyle(Theme.purple)

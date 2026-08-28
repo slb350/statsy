@@ -89,23 +89,23 @@ public actor MetricsEngine {
 
     private func sampleStorage(elapsed: TimeInterval) -> StorageMetrics {
         let capacity = storage.capacity()
-        let io = storage.lifetimeBytes()
-        defer { previousIO = io }
+        let ioCounters = storage.lifetimeBytes()
+        defer { previousIO = ioCounters }
 
         var readRate = 0.0
         var writeRate = 0.0
         if let previousIO {
             readRate = RateCalculator.rate(
-                previous: previousIO.read, current: io.read, elapsed: elapsed
+                previous: previousIO.read, current: ioCounters.read, elapsed: elapsed
             )
             writeRate = RateCalculator.rate(
-                previous: previousIO.written, current: io.written, elapsed: elapsed
+                previous: previousIO.written, current: ioCounters.written, elapsed: elapsed
             )
         }
 
         return StorageMetrics(
             total: capacity.total, used: capacity.used, free: capacity.free,
-            lifetimeRead: io.read, lifetimeWritten: io.written,
+            lifetimeRead: ioCounters.read, lifetimeWritten: ioCounters.written,
             readRate: readRate, writeRate: writeRate, volumes: capacity.volumes
         )
     }

@@ -90,7 +90,7 @@ struct TopStreamParserTests {
         var parser = TopStreamParser(skipFirstBlock: true)
         let blocks = feed(&parser, [
             "Processes: 1058 total", Fixture.header, Fixture.safari, Fixture.window, "",
-            "Processes: 1058 total", Fixture.header, Fixture.kernel, Fixture.tiny, "",
+            "Processes: 1058 total", Fixture.header, Fixture.kernel, Fixture.tiny, ""
         ])
         #expect(blocks.count == 1)
         #expect(blocks.first?.map(\.name) == ["kernel_task", "XprotectService"])
@@ -101,7 +101,7 @@ struct TopStreamParserTests {
         var parser = TopStreamParser(skipFirstBlock: false)
         let blocks = feed(&parser, [
             Fixture.header, Fixture.safari, "",
-            Fixture.header, Fixture.kernel, "",
+            Fixture.header, Fixture.kernel, ""
         ])
         #expect(blocks.count == 2)
         #expect(blocks[0].map(\.name) == ["Safari"])
@@ -113,7 +113,7 @@ struct TopStreamParserTests {
         var parser = TopStreamParser(skipFirstBlock: false)
         let blocks = feed(&parser, [
             Fixture.header, Fixture.safari, Fixture.window,
-            Fixture.header, Fixture.kernel,
+            Fixture.header, Fixture.kernel
         ])
         #expect(blocks.count == 1)
         #expect(blocks[0].count == 2)
@@ -125,7 +125,7 @@ struct ProcessTableTests {
     private let samples = [
         ProcessSample(id: 1, name: "low-cpu-big-mem", cpu: 1, memory: 27_000_000_000),
         ProcessSample(id: 2, name: "high-cpu-small-mem", cpu: 88.4, memory: 1_000_000),
-        ProcessSample(id: 3, name: "middling", cpu: 40.6, memory: 3_000_000_000),
+        ProcessSample(id: 3, name: "middling", cpu: 40.6, memory: 3_000_000_000)
     ]
 
     @Test("ranks the same samples independently by cpu and by memory")

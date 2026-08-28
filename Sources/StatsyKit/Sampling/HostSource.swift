@@ -127,6 +127,6 @@ public struct HostSource: Sendable {
         var buffer = [UInt8](repeating: 0, count: size)
         guard sysctlbyname(name, &buffer, &size, nil, 0) == 0 else { return nil }
         if let terminator = buffer.firstIndex(of: 0) { buffer.removeSubrange(terminator...) }
-        return String(decoding: buffer, as: UTF8.self)
+        return String(bytes: buffer, encoding: .utf8)
     }
 }

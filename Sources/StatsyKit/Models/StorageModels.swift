@@ -24,6 +24,20 @@ public struct VolumeUsage: Sendable, Equatable, Identifiable {
     }
 }
 
+public struct StorageCapacity: Sendable, Equatable {
+    public let total: UInt64
+    public let used: UInt64
+    public let free: UInt64
+    public let volumes: [VolumeUsage]
+
+    public init(total: UInt64, used: UInt64, free: UInt64, volumes: [VolumeUsage]) {
+        self.total = total
+        self.used = used
+        self.free = free
+        self.volumes = volumes
+    }
+}
+
 public struct StorageMetrics: Sendable, Equatable {
     public let total: UInt64
     public let used: UInt64

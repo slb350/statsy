@@ -19,7 +19,7 @@ struct FormatTests {
 
     @Test("renders whole gibibytes for the memory readout")
     func gibibytes() {
-        // Measured "Memory Used" on this machine: top reported 114G.
+        // Representative in-use memory after excluding reclaimable pages.
         #expect(Format.gibibytes(122_605_912_064) == "114")
         #expect(Format.gibibytes(137_438_953_472) == "128")
     }

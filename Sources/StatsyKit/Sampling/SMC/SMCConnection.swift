@@ -59,6 +59,12 @@ final class SMCConnection {
 ///
 /// Field order and padding are load-bearing; `SMCReader` asserts the size at
 /// startup so a layout change fails loudly rather than returning nonsense.
+private struct SMCTailPadding {
+    var byte0: UInt8 = 0
+    var byte1: UInt8 = 0
+    var byte2: UInt8 = 0
+}
+
 struct SMCKeyData {
     struct Version {
         var major: UInt8 = 0
@@ -85,7 +91,42 @@ struct SMCKeyData {
         /// C pads this struct to 12 bytes. Swift otherwise reuses the three
         /// slack bytes for the fields that follow it in `SMCKeyData`, which
         /// shortens the request to 76 bytes and misaligns everything after it.
-        private var padding: (UInt8, UInt8, UInt8) = (0, 0, 0)
+        private var padding = SMCTailPadding()
+    }
+
+    struct PayloadBytes {
+        var byte00: UInt8 = 0
+        var byte01: UInt8 = 0
+        var byte02: UInt8 = 0
+        var byte03: UInt8 = 0
+        var byte04: UInt8 = 0
+        var byte05: UInt8 = 0
+        var byte06: UInt8 = 0
+        var byte07: UInt8 = 0
+        var byte08: UInt8 = 0
+        var byte09: UInt8 = 0
+        var byte10: UInt8 = 0
+        var byte11: UInt8 = 0
+        var byte12: UInt8 = 0
+        var byte13: UInt8 = 0
+        var byte14: UInt8 = 0
+        var byte15: UInt8 = 0
+        var byte16: UInt8 = 0
+        var byte17: UInt8 = 0
+        var byte18: UInt8 = 0
+        var byte19: UInt8 = 0
+        var byte20: UInt8 = 0
+        var byte21: UInt8 = 0
+        var byte22: UInt8 = 0
+        var byte23: UInt8 = 0
+        var byte24: UInt8 = 0
+        var byte25: UInt8 = 0
+        var byte26: UInt8 = 0
+        var byte27: UInt8 = 0
+        var byte28: UInt8 = 0
+        var byte29: UInt8 = 0
+        var byte30: UInt8 = 0
+        var byte31: UInt8 = 0
     }
 
     var key: UInt32 = 0
@@ -96,7 +137,7 @@ struct SMCKeyData {
     var status: UInt8 = 0
     var data8: UInt8 = 0
     var data32: UInt32 = 0
-    var bytes: (UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8) = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+    var bytes = PayloadBytes()
 
     /// Offset of `bytes` within the struct, used to read the payload back out.
     static let payloadOffset = 48
@@ -123,8 +164,8 @@ enum FourCharCode {
     static func decode(_ value: UInt32) -> String {
         let bytes = [
             UInt8((value >> 24) & 0xFF), UInt8((value >> 16) & 0xFF),
-            UInt8((value >> 8) & 0xFF), UInt8(value & 0xFF),
+            UInt8((value >> 8) & 0xFF), UInt8(value & 0xFF)
         ]
-        return String(decoding: bytes, as: UTF8.self)
+        return String(bytes: bytes, encoding: .utf8) ?? ""
     }
 }

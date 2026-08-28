@@ -54,9 +54,11 @@ That prints one snapshot in a form you can compare directly against `top`, `df`,
 
 Five of those are not the obvious API, because the obvious API is wrong.
 
-Memory used has to include inactive pages. Summing active, wired and compressed
-gives 69 GB on a machine where `top` reports 114 GB, and the missing 44 GB is
-inactive.
+The memory headline is pressure-oriented rather than a copy of `top`'s "used"
+total. It reports active + wired + compressed as **in use** and shows inactive
+pages separately as **reclaimable**. On a representative sample that means a
+70 GB in-use headline plus 44 GB reclaimable, while `top` combines both into
+114 GB used. Free includes both free and speculative pages.
 
 Process ranking needs `top` because unprivileged libproc cannot see other users'
 processes. `proc_pidinfo` and `proc_pid_rusage` return EPERM for about 180 of
