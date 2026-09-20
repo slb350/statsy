@@ -54,31 +54,55 @@ struct StoragePane: View {
             }
 
             VStack(alignment: .leading, spacing: 6) {
-                SectionLabel(text: "Lifetime I/O", trailing: lifetimeTotal)
-                GeometryReader { geometry in
-                    let available = max(0, geometry.size.width - 2)
-                    HStack(spacing: 2) {
-                        lifetimeCell(
-                            "READ \(Format.binary(storage.lifetimeRead))",
-                            tint: Theme.channelWhite.opacity(0.16),
-                            text: Theme.channelWhite
+                SectionLabel(
+                    text: showsRateCells ? "Lifetime I/O" : "Throughput",
+                    trailing: showsRateCells ? lifetimeTotal : rateSummary
+                )
+                // The GPU band takes this space on a remote target, so both
+                // the lifetime split and the rate cells go and the throughput
+                // figures move up onto the section label.
+                if showsRateCells {
+                    GeometryReader { geometry in
+                        let available = max(0, geometry.size.width - 2)
+                        HStack(spacing: 2) {
+                            lifetimeCell(
+                                "READ \(Format.binary(storage.lifetimeRead))",
+                                tint: Theme.channelWhite.opacity(0.16),
+                                text: Theme.channelWhite
+                            )
+                            .frame(width: available * readShare)
+                            lifetimeCell(
+                                "WRITE \(Format.binary(storage.lifetimeWritten))",
+                                tint: Theme.purple.opacity(0.2),
+                                text: Theme.purpleLight
+                            )
+                        }
+                    }
+                    .frame(height: 22)
+
+                    HStack(spacing: 9) {
+                        MeterCell(
+                            label: "Read now",
+                            value: Format.rate(storage.readRate),
+                            valueSize: 22,
+                            isActive: storage.readRate > 0
                         )
-                        .frame(width: available * readShare)
-                        lifetimeCell(
-                            "WRITE \(Format.binary(storage.lifetimeWritten))",
-                            tint: Theme.purple.opacity(0.2),
-                            text: Theme.purpleLight
+                        MeterCell(
+                            label: "Write now",
+                            value: Format.rate(storage.writeRate),
+                            valueSize: 22,
+                            isActive: storage.writeRate > 0
                         )
                     }
                 }
-                .frame(height: 22)
-
-                HStack(spacing: 9) {
-                    rateCell("Read now", Format.rate(storage.readRate), active: storage.readRate > 0)
-                    rateCell("Write now", Format.rate(storage.writeRate), active: storage.writeRate > 0)
-                }
             }
         }
+    }
+
+    private var showsRateCells: Bool { !snapshot.showsGPUBand }
+
+    private var rateSummary: String {
+        "↓ \(Format.rate(storage.readRate))  ↑ \(Format.rate(storage.writeRate))"
     }
 
     private var readShare: Double {
@@ -102,16 +126,5 @@ struct StoragePane: View {
                 .padding(.leading, 7)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-
-    private func rateCell(_ label: String, _ value: String, active: Bool) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Rectangle().fill(Theme.rule).frame(height: 1)
-            SectionLabel(text: label)
-            Text(value)
-                .font(Theme.numeral(22))
-                .foregroundStyle(active ? Theme.channelWhite : Theme.textFaint)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }

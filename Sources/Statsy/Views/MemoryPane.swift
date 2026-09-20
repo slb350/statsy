@@ -46,23 +46,28 @@ struct MemoryPane: View {
                     trailing: "\(Format.percent(memory.swapFraction))% · \(swapDetail)",
                     trailingColor: Theme.yellow
                 )
-                SwapBar(fraction: memory.swapFraction)
+                SwapBar(
+                    fraction: memory.swapFraction,
+                    height: snapshot.barHeight
+                )
             }
 
-            VStack(alignment: .leading, spacing: 3) {
-                SectionLabel(text: "Top processes", trailing: "footprint")
-                ProcessList(
-                    processes: snapshot.processes.byMemory,
-                    accent: Theme.yellow,
-                    value: { Format.binary($0.memory) },
-                    magnitude: { Double($0.memory) }
-                )
+            if snapshot.hasProcessTelemetry {
+                VStack(alignment: .leading, spacing: 3) {
+                    SectionLabel(text: "Top processes", trailing: "footprint")
+                    ProcessList(
+                        processes: snapshot.processes.byMemory,
+                        accent: Theme.yellow,
+                        value: { Format.binary($0.memory) },
+                        magnitude: { Double($0.memory) }
+                    )
+                }
             }
         }
     }
 
     private func share(_ bytes: UInt64) -> Double {
-        memory.total == 0 ? 0 : Double(bytes) / Double(memory.total)
+        .ratio(bytes, of: memory.total)
     }
 
     private func legend(_ name: String, _ bytes: UInt64, _ color: Color) -> some View {
@@ -77,6 +82,7 @@ struct MemoryPane: View {
 /// Swap gets a hatched fill so it reads as pressure rather than capacity.
 private struct SwapBar: View {
     let fraction: Double
+    let height: CGFloat
 
     /// One stripe plus its gap.
     private static let pitch: CGFloat = 6
@@ -93,7 +99,7 @@ private struct SwapBar: View {
             .clipped()
             .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .frame(height: 30)
+        .frame(height: height)
         .background(Theme.track)
     }
 }

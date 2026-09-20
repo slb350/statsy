@@ -5,16 +5,21 @@ public enum VolumeRole: Sendable, Equatable {
     case data
     case swap
     case system
+    /// Storage reached over the network, such as the DondeNAS automount.
+    case network
 }
 
 public struct VolumeUsage: Sendable, Equatable, Identifiable {
-    public var id: VolumeRole { role }
+    /// Keyed by name rather than by role: a Linux target shows several data
+    /// volumes at once, and a role-keyed identity silently collapses them into
+    /// one row.
+    public var id: String { name }
     public let role: VolumeRole
     public let name: String
     public let used: UInt64
     public let total: UInt64
 
-    public var fraction: Double { total == 0 ? 0 : Double(used) / Double(total) }
+    public var fraction: Double { .ratio(used, of: total) }
 
     public init(role: VolumeRole, name: String, used: UInt64, total: UInt64) {
         self.role = role
@@ -50,7 +55,7 @@ public struct StorageMetrics: Sendable, Equatable {
     public let writeRate: Double
     public let volumes: [VolumeUsage]
 
-    public var usedFraction: Double { total == 0 ? 0 : Double(used) / Double(total) }
+    public var usedFraction: Double { .ratio(used, of: total) }
 
     public init(
         total: UInt64 = 0, used: UInt64 = 0, free: UInt64 = 0,

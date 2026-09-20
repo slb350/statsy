@@ -92,14 +92,24 @@ public enum ThermalCalculator {
     public static func metrics(_ sensors: [ThermalSensor], fans: [FanReading] = []) -> ThermalMetrics {
         var grouped: [SensorCluster: [Double]] = [:]
         for sensor in sensors {
-            guard plausibleRange.contains(sensor.celsius),
-                  let cluster = cluster(for: sensor.key)
-            else { continue }
+            guard let cluster = cluster(for: sensor.key) else { continue }
             grouped[cluster, default: []].append(sensor.celsius)
         }
+        return metrics(grouped: grouped, fans: fans)
+    }
 
+    /// Averages readings that have already been assigned to clusters.
+    ///
+    /// A Linux target names its sensors by hwmon chip rather than by SMC key,
+    /// so it groups them itself and shares this arithmetic and its plausibility
+    /// filter instead of repeating them.
+    public static func metrics(
+        grouped: [SensorCluster: [Double]], fans: [FanReading] = []
+    ) -> ThermalMetrics {
         var clusters: [SensorCluster: ClusterReading] = [:]
-        for (cluster, values) in grouped where !values.isEmpty {
+        for (cluster, readings) in grouped {
+            let values = readings.filter(plausibleRange.contains)
+            guard !values.isEmpty else { continue }
             clusters[cluster] = ClusterReading(
                 average: values.reduce(0, +) / Double(values.count),
                 minimum: values.min() ?? 0,

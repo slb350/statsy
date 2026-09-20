@@ -23,17 +23,12 @@ final class PanelWindow {
 
     /// The display the panel belongs on: the one matching its exact pixel size.
     ///
-    /// Falls back to any external display, then to whatever is attached, so the
-    /// app stays usable when the panel is unplugged. The fallback asks
-    /// CoreGraphics which display is built in rather than comparing against
-    /// `NSScreen.main`, which follows keyboard focus and would move the panel
-    /// around as the user switches windows.
+    /// Nil when that display is not attached. The panel is built for one piece
+    /// of hardware at 1:1 scale; on any other display it is a 1280x480
+    /// always-on-top slab over whatever the machine is actually being used for,
+    /// so it hides rather than following the user home.
     static func targetScreen() -> NSScreen? {
-        let screens = NSScreen.screens
-        if let exact = screens.first(where: { $0.frame.size == PanelView.size }) {
-            return exact
-        }
-        return screens.first { !$0.isBuiltIn } ?? screens.first
+        NSScreen.screens.first { $0.frame.size == PanelView.size }
     }
 
     func show() {
@@ -54,8 +49,8 @@ final class PanelWindow {
         window.contentView = NSHostingView(rootView: PanelRoot(model: model))
         self.window = window
 
+        // Shows the panel, or leaves it hidden, according to what is attached.
         reposition()
-        window.orderFrontRegardless()
 
         screenObserver = NotificationCenter.default.addObserver(
             forName: NSApplication.didChangeScreenParametersNotification,
@@ -65,9 +60,21 @@ final class PanelWindow {
         }
     }
 
-    /// Re-seats the window after a display is attached, removed or rearranged.
+    /// Re-seats the window after a display is attached, removed or rearranged,
+    /// and puts the panel away entirely while its display is absent.
+    ///
+    /// Sampling stops with it: idle, the panel and its `top` child are the most
+    /// expensive thing running for no reason at all.
     func reposition() {
-        guard let window, let screen = Self.targetScreen() else { return }
+        guard let window else { return }
+        guard let screen = Self.targetScreen() else {
+            if window.isVisible {
+                window.orderOut(nil)
+                model.stop()
+            }
+            return
+        }
+
         let frame = screen.frame
         window.setFrame(
             NSRect(
@@ -78,16 +85,11 @@ final class PanelWindow {
             ),
             display: true
         )
-    }
-}
 
-private extension NSScreen {
-    /// Whether this is the machine's built-in display.
-    var isBuiltIn: Bool {
-        guard let number = deviceDescription[
-            NSDeviceDescriptionKey("NSScreenNumber")
-        ] as? NSNumber else { return false }
-        return CGDisplayIsBuiltin(CGDirectDisplayID(number.uint32Value)) != 0
+        if !window.isVisible {
+            model.start()
+            window.orderFrontRegardless()
+        }
     }
 }
 

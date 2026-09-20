@@ -35,8 +35,8 @@ public struct MemoryMetrics: Sendable, Equatable {
     public let swapUsed: UInt64
     public let swapTotal: UInt64
 
-    public var inUseFraction: Double { total == 0 ? 0 : Double(inUse) / Double(total) }
-    public var swapFraction: Double { swapTotal == 0 ? 0 : Double(swapUsed) / Double(swapTotal) }
+    public var inUseFraction: Double { .ratio(inUse, of: total) }
+    public var swapFraction: Double { .ratio(swapUsed, of: swapTotal) }
 
     public init(
         total: UInt64, inUse: UInt64, wired: UInt64, compressed: UInt64,

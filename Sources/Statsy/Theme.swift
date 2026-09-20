@@ -68,6 +68,7 @@ enum Theme {
         case .data: channelWhite
         case .swap: yellow
         case .system: purple
+        case .network: purpleLight
         }
     }
 

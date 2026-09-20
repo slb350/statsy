@@ -9,8 +9,10 @@ import SwiftUI
 struct CoreGrid: View {
     let cores: [CoreLoad]
     let clusters: [CPUCluster]
-
-    private static let height: CGFloat = 30
+    /// Taller where nothing follows it in the pane. Forty-eight threads at the
+    /// compact height are a row of stubs; given the room a process list would
+    /// have taken, the grid reads as a chart.
+    let height: CGFloat
 
     /// Index of the first core in each cluster after the first, where a divider goes.
     private var dividerIndices: Set<Int> {
@@ -31,31 +33,32 @@ struct CoreGrid: View {
                 if dividers.contains(core.id) {
                     Rectangle()
                         .fill(Theme.rule)
-                        .frame(width: 1, height: Self.height)
+                        .frame(width: 1, height: height)
                         .padding(.horizontal, 2)
                 }
-                CoreBar(busy: core.busy)
+                CoreBar(busy: core.busy, height: height)
             }
         }
-        .frame(height: Self.height)
+        .frame(height: height)
     }
 }
 
 private struct CoreBar: View {
     let busy: Double
+    /// Passed down rather than measured: the grid is told its height, so 48
+    /// `GeometryReader`s per redraw were reading back a number already in hand.
+    let height: CGFloat
 
     var body: some View {
-        GeometryReader { geometry in
-            VStack(spacing: 0) {
-                Spacer(minLength: 0)
-                Rectangle()
-                    .fill(Theme.coreColor(busy))
-                    // An idle core keeps a visible stub so the grid reads as a
-                    // row of cores rather than gaps.
-                    .frame(height: max(3, geometry.size.height * busy.clamped01))
-            }
+        VStack(spacing: 0) {
+            Spacer(minLength: 0)
+            Rectangle()
+                .fill(Theme.coreColor(busy))
+                // An idle core keeps a visible stub so the grid reads as a
+                // row of cores rather than gaps.
+                .frame(height: max(3, height * busy.clamped01))
         }
-        .background(Theme.track)
         .frame(maxWidth: .infinity)
+        .background(Theme.track)
     }
 }

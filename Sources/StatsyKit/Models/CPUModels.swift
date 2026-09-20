@@ -77,14 +77,18 @@ public struct CPUMetrics: Sendable, Equatable {
 public enum CPUCalculator {
     /// Derives utilisation from two tick samples.
     ///
-    /// Returns `.zero` when the samples are unusable (mismatched core counts, or
-    /// no elapsed ticks) rather than dividing by zero.
+    /// Reports an idle machine when the samples are unusable (mismatched core
+    /// counts, or no elapsed ticks) rather than dividing by zero. The load
+    /// average survives that path: it is read whole rather than differenced, so
+    /// a first sample with no baseline still has one worth showing.
     public static func metrics(
         previous: [CPUTicks],
         current: [CPUTicks],
         loadAverage: LoadAverage
     ) -> CPUMetrics {
-        guard !current.isEmpty, previous.count == current.count else { return .zero }
+        guard !current.isEmpty, previous.count == current.count else {
+            return CPUMetrics(user: 0, system: 0, idle: 1, cores: [], loadAverage: loadAverage)
+        }
 
         var cores: [CoreLoad] = []
         cores.reserveCapacity(current.count)

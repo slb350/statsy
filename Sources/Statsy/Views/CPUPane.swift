@@ -32,17 +32,25 @@ struct CPUPane: View {
 
             VStack(alignment: .leading, spacing: 5) {
                 SectionLabel(text: clusterCaption)
-                CoreGrid(cores: cpu.cores, clusters: snapshot.machine.clusters)
+                CoreGrid(
+                    cores: cpu.cores,
+                    clusters: snapshot.machine.clusters,
+                    height: snapshot.barHeight
+                )
             }
 
-            VStack(alignment: .leading, spacing: 3) {
-                SectionLabel(text: "Top processes", trailing: "% of one core")
-                ProcessList(
-                    processes: snapshot.processes.byCPU,
-                    accent: Theme.purple,
-                    value: { Format.decimal($0.cpu, decimals: 1) },
-                    magnitude: \.cpu
-                )
+            // A remote target has no process telemetry, and an empty list
+            // reserving half the pane reads as a panel that is broken.
+            if snapshot.hasProcessTelemetry {
+                VStack(alignment: .leading, spacing: 3) {
+                    SectionLabel(text: "Top processes", trailing: "% of one core")
+                    ProcessList(
+                        processes: snapshot.processes.byCPU,
+                        accent: Theme.purple,
+                        value: { Format.decimal($0.cpu, decimals: 1) },
+                        magnitude: \.cpu
+                    )
+                }
             }
         }
     }

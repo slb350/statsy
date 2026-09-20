@@ -10,8 +10,10 @@ public struct MachineSource: Sendable {
         MachineInfo(
             model: host.sysctlString("machdep.cpu.brand_string") ?? "Mac",
             clusters: host.clusters(),
-            gpuCoreCount: gpuCoreCount(),
+            gpuDescription: gpuCoreCount().map { "\($0)-core GPU" },
             memoryBytes: host.physicalMemory,
+            ranksProcesses: true,
+            platform: "macOS",
             osVersion: osVersion()
         )
     }

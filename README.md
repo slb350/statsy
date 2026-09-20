@@ -18,13 +18,16 @@ The same panel with all 18 cores saturated and a load average of 44:
 ```bash
 swift build && swift test
 ./make-app.sh
-open .build/Statsy.app
+open '.build/Statsy Menu.app'
 ```
 
 Statsy has no Dock icon and no menu bar entry. It puts a borderless window on
 whichever display measures 1280x480 and re-seats itself when the display
-arrangement changes, falling back to any external display when that panel is
-not attached.
+arrangement changes.
+
+With no such display attached it shows nothing and samples nothing, so undocking parks it rather than dropping a 1280x480 always-on-top window onto the laptop screen. Redocking brings it back.
+
+`make-app.sh` also builds Statsy Menu.app, a menu bar item that starts and stops the panel and shows which state it is in — the panel itself has no UI to quit from. Keep the two bundles in the same folder: the controller looks for the panel beside itself before it asks Launch Services or checks `/Applications`.
 
 To check the sampling layer without the UI:
 
@@ -32,10 +35,27 @@ To check the sampling layer without the UI:
 swift run statsy-probe
 ```
 
-That prints one snapshot in a form you can compare directly against `top`, `df`,
-`netstat -ib` and `smc`.
+That prints one snapshot in a form you can compare directly against `top`, `df`, `netstat -ib` and `smc`. To see a layout without the display attached:
+
+```bash
+swift run Statsy --render panel.png
+```
+
+## Targets
+
+The menu bar item picks which machine the panel shows. The default is this Mac. The other is `homelab-ai-1`, a Threadripper with three RTX 3080s that serves a 27B model, where the reading worth watching is how much VRAM is left.
+
+![Statsy showing homelab-ai-1](docs/images/panel-homelab-ai-1.png)
+
+Switching takes effect on a running panel without restarting it. A remote target has no process telemetry, so the lower half of each column becomes a band of GPU cards, and the ribbon carries unit and endpoint health in place of fan speeds.
+
+Readings come from that host's node_exporter, scraped through an `ssh -L` forward. The host admits port 9100 from its operations server alone, and the forward means that does not have to change: no new listener, no firewall rule and no credential inside the app. The key is ssh's business.
+
+Two cadences land on the same screen. Everything node_exporter reads is current as of the scrape; GPU, NVMe, unit and endpoint figures come from a collector on a one-minute timer, and the ribbon shows that age rather than implying otherwise. If the host goes away the panel says so and ages the last reading rather than holding a stale number that still looks live.
 
 ## Where the numbers come from
+
+On this Mac:
 
 | Reading | Source |
 | --- | --- |
@@ -54,11 +74,15 @@ That prints one snapshot in a form you can compare directly against `top`, `df`,
 
 Five of those are not the obvious API, because the obvious API is wrong.
 
+A remote target reads all of it from node_exporter instead, with GPU, NVMe and service figures coming from the homelab fleet collector's textfile. The panel maps those onto the same `Snapshot` the local samplers produce, so nothing above the sampling layer knows which machine it is drawing.
+
 The memory headline is pressure-oriented rather than a copy of `top`'s "used"
 total. It reports active + wired + compressed as **in use** and shows inactive
 pages separately as **reclaimable**. On a representative sample that means a
 70 GB in-use headline plus 44 GB reclaimable, while `top` combines both into
 114 GB used. Free includes both free and speculative pages.
+
+That formula holds on a Linux target too, with each bucket filled from `/proc/meminfo`: anonymous and shared pages as in use, unreclaimable kernel memory as wired, zswap as compressed, page cache as reclaimable. It matters most there, where an 80 GiB model sitting in page cache would otherwise show an idle host at 85% memory.
 
 Process ranking needs `top` because unprivileged libproc cannot see other users'
 processes. `proc_pidinfo` and `proc_pid_rusage` return EPERM for about 180 of
@@ -86,6 +110,8 @@ The panel refreshes at 1 Hz for about 0.2% of one core, plus roughly 1.2% for
 its `top` child. Temperatures sample every five seconds instead: reading all 130
 SMC sensors takes 17 ms of blocked hardware wait, and they move far more slowly
 than that.
+
+A remote target costs 1.4% of one core here and is polled every two seconds rather than every second, because the scrape lands on the machine being measured and the budget applies there as well.
 
 ## Palette
 
