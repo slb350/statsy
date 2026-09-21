@@ -1,5 +1,44 @@
 # Changelog
 
+## 2026-09-21 — the panel gets out of the way of modal alerts
+
+A Finder "empty the Trash?" confirmation opened on the 1280x480 display and vanished under the panel. Finder was app-modal and therefore wedged: no Finder window would open and the Dock icon did nothing, with nothing on screen to explain why. macOS had centred the alert there because the Trash window was parked on that display, and alerts follow their application's key window.
+
+### The level trap
+
+The panel sits at `.statusBar` (25) so the menu bar, which every display gets at `.mainMenu` (24) while "Displays have separate Spaces" is on, does not draw over the header. A modal alert sits at `.modalPanel` (8). Beating the menu bar and letting an alert through are not satisfiable by any one static level, so the level became dynamic.
+
+### Landed
+
+- `StatsyWindowing`, a new target holding both halves the way `StatsyKit` does. `ScreenOccupancy` owns the resting and ducked levels and carries the tests; `WindowListSource` is `CGWindowList` acquisition, untested as the samplers' sources are.
+- `PanelWindow` polls every 2s while the panel is on screen, and lowers the window to `.normal` while something in the band is on its display. Lowering rather than ordering out leaves `reposition()` the only owner of presence and of the sampling lifecycle, so ducking cannot stop sampling or make the panel flicker. The poll starts and stops alongside `model.start()`/`model.stop()`, so an absent display costs nothing.
+- 14 tests added across 2 new suites. Suite total 115 to 129.
+
+### The band is the whole design
+
+`.normal` exclusive to `.modalPanel` inclusive. Ordinary windows fall below it because sitting above them is the panel's purpose. Everything from `.utilityWindow` (19) up is furniture that never goes away, and ducking for furniture would retire the panel permanently.
+
+The first cut of this ran the ceiling up to `.mainMenu` and carved the menu bar and status items out by hand. That admitted the Dock, which sits at 20 and follows the pointer onto whichever display is active — so the first time the pointer crossed onto the strip the panel would have ducked and stayed ducked, the exact failure the carve-outs existed to prevent. Naming the Dock as a third exception would have been the wrong fix; the band moved instead.
+
+### Measurements
+
+A window-list read costs 0.355ms, best-of-seven over 400 calls at `-O`. At the 2s interval that is 0.018% of a core. Cost is no longer what sets the interval — 2s bounds how long an alert can stay buried and matches `TopProcessSource`.
+
+Walking the list as `NSDictionary` rather than bridging it to `[[String: Any]]` took the read from 1.165ms to 0.355ms. The bridge deep-copies all 63 entries into Swift dictionaries and every one is discarded. Dropping the unused owner-PID lookup was part of the same win.
+
+### Found while measuring
+
+- `NSAlert.window.level` reads 0 before the alert is displayed; the window server reports layer 8 once `runModal` is running. A predicate written from the AppKit value would have matched nothing.
+- `CGDisplayBounds` already returns a display's frame in the window server's top-down space, which is what the window list uses. A hand-rolled AppKit-to-window-server flip and the four tests pinning its arithmetic were deleted in favour of it.
+- `runModal` re-centres the alert on the key window's screen, discarding a `setFrameOrigin` made beforehand. The first verification run placed its alert on the left-hand display and proved nothing. Repositioning from a timer inside the modal session works.
+- Verified end to end against the built bundle: a layer-8 window on the strip took the panel from 25 to 0 within one poll, and back to 25 within one poll of the alert closing.
+
+### Out of scope
+
+A sheet attached to a window parked on that display inherits its parent's level and is indistinguishable from an ordinary window, so the panel will still cover it. Moving the Trash window off the display removed the trigger that started this.
+
+A deeper fix was considered and not taken: put the window at `.floating` (3), below every alert, and inset the content by the menu bar's height so the menu bar covers dead space instead of the header. That deletes this entire subsystem. It costs a header redesign and ~30 of 480 points of panel height permanently, on a display where type is already at 56% of usual physical size, so it is a layout decision rather than a cleanup.
+
 ## 2026-09-20 — second target: homelab-ai-1
 
 The panel could only ever show the machine it ran on. It can now be pointed at `homelab-ai-1`, the three-GPU CUDA workstation, and switched back from the menu bar item without restarting anything.

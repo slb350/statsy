@@ -7,7 +7,8 @@ let package = Package(
     targets: [
         .target(name: "StatsyKit"),
         .target(name: "StatsyControl", dependencies: ["StatsyKit"]),
-        .executableTarget(name: "Statsy", dependencies: ["StatsyKit"]),
+        .target(name: "StatsyWindowing"),
+        .executableTarget(name: "Statsy", dependencies: ["StatsyKit", "StatsyWindowing"]),
         .executableTarget(name: "StatsyMenu", dependencies: ["StatsyControl"]),
         .executableTarget(name: "statsy-probe", dependencies: ["StatsyKit"]),
         .testTarget(
@@ -16,5 +17,6 @@ let package = Package(
             resources: [.copy("Fixtures")]
         ),
         .testTarget(name: "StatsyControlTests", dependencies: ["StatsyControl", "StatsyKit"]),
+        .testTarget(name: "StatsyWindowingTests", dependencies: ["StatsyWindowing"]),
     ]
 )
