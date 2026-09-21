@@ -4,13 +4,13 @@
 
 The panel could only ever show the machine it ran on. It can now be pointed at `homelab-ai-1`, the three-GPU CUDA workstation, and switched back from the menu bar item without restarting anything.
 
-**Transport**
+### Transport
 
 Statsy scrapes that host's node_exporter through an `ssh -L` forward. The alternatives were an OTLP pipeline and Grafana's query API. There is no OTLP receiver anywhere in the homelab; the only OpenTelemetry in `brandoncraft-observability` is a Grafana dashboard reading Temporal SDK metrics that arrive by scrape. Standing one up would have meant new services on both ends, and the receiver would have had to live on a laptop that sleeps and changes address. Grafana on `.72:3000` works today but couples the panel to the whole operations stack and needs a token in the Keychain. The forward needs no new listener, no UFW change and no credential inside the app, and it matches the pattern already used for the `.72` to `.73` query proxy.
 
 UFW on `.88` admits port 9100 from the operations host alone, which is deliberate and stays that way. The exporter binds the host's LAN address rather than loopback, so the forward targets `192.168.68.88:9100` from inside the host, not `127.0.0.1`.
 
-**Landed**
+### Landed
 
 - `StatsyKit/Remote`: `PrometheusText` (exposition-format scanner), `MetricSet` (name-bucketed lookup), `RemoteMapper` and its two extensions (pure, fixture-tested), `RemoteSnapshotProvider` and `SSHTunnel` (acquisition, untested, as the sources are).
 - `SnapshotProvider` is the new seam. `MetricsEngine` conforms in one line, `PanelModel` no longer knows which kind of target it is showing, and `refreshInterval` moved onto the provider so a remote host can be polled at 2s while the local one stays at 1 Hz.
@@ -21,13 +21,13 @@ UFW on `.88` admits port 9100 from the operations host alone, which is deliberat
 - `statsy-probe --target <id>` and `Statsy --render <path>`, which writes one frame to a PNG at scale 1.0 so a layout can be checked without the 1280x480 display attached.
 - 59 tests added across 5 new suites. Suite total 53 to 112.
 
-**Measurements**
+### Measurements
 
 Steady state on the remote target is 1.42% of one core, inside the 1.5% budget and with no `top` child to pay for. The fixture is a real 2,802-line scrape, reduced to the 598 series the mapper reads and redacted of MAC addresses and GPU serials before going into the repo.
 
 Checked against the host's own tools: memory, swap, GPU VRAM, utilisation, power, temperature, load average, core count and uptime all agree with `free`, `nvidia-smi` and `uptime`. Storage disagreed by 4 GiB on the root volume until the mapper started preferring `node_filesystem_free_bytes`, which separates ext4's reserved blocks from space genuinely in use the way `df` does.
 
-**Found while mapping**
+### Found while mapping
 
 - ai-1's `netdev` collector is failing, so there are no per-interface byte counters at all. `node_netstat_IpExt_InOctets`/`OutOctets` carry the host-wide totals the panel actually wants. This is a real gap in the fleet monitoring, independent of Statsy.
 - The CPU sensor is `k10temp`, not the `coretemp` the Intel host uses, so thermal mapping keys off `node_hwmon_chip_names` rather than a chip path.
@@ -47,7 +47,7 @@ Checked against the host's own tools: memory, swap, GPU VRAM, utilisation, power
 - `Snapshot.marking(_:)` replaced an eleven-field rebuild in the stale path, where a forgotten field would have silently blanked a section.
 - Smaller: dead `hasReadings`/`isLocal`/`hasBaseline`, a write-only `provider` property, `isRunning` restating `loop != nil`, per-core array literals, a per-line array allocation in the parser, and five grouped dictionaries built to read nine keys.
 
-**Not done**
+### Not done
 
 Targets are compiled into `TargetRegistry` rather than read from a config file, and the `homelab_*` prefix is hard-coded in the mapper. For two targets on one machine that is the smaller thing. The parser still converts the 160 KB response to a `String` and scans it as `Character`s; the name filter takes most of the win a UTF-8 rewrite would, and the measured cost is inside budget.
 
@@ -55,7 +55,7 @@ Targets are compiled into `TargetRegistry` rather than read from a config file, 
 
 Statsy has no Dock icon and no menu bar entry, which is right on its own display and wrong on a laptop. Undocking re-seats the panel onto the built-in screen above the menu bar, where there is no way to quit it short of Activity Monitor. `make-app.sh` now builds a second bundle, Statsy Menu.app, whose only job is to start and stop the panel.
 
-**Landed**
+### Landed
 
 - `StatsyControl`: `PanelLocator` (sibling bundle, then Launch Services, then `/Applications`) and `PanelMenuPresentation` (title, icon and enablement per state).
 - `StatsyMenu`: `PanelProcess` over `NSWorkspace` and `NSRunningApplication`, `StatusItemController` for the status item and its menu.
@@ -76,13 +76,13 @@ The symbol test is worth keeping: a mistyped SF Symbol name yields a blank menu 
 - Dropped: the observer tokens and `deinit` in `PanelProcess` (the object lives for the process), the unused `Equatable` on `PanelMenuPresentation`, and `make-app.sh`'s redundant display-name parameter.
 - Added `BundleIdentityTests`, which reads `make-app.sh` and asserts the panel's name and identifier still agree with `PanelLocator`. Renaming one silently breaks the controller with the suite still green. Confirmed to fail on a deliberate rename. 53 → 54 tests.
 
-**Disconfirmed**
+### Disconfirmed
 
 A force-killed panel was expected to orphan its `top` child, which costs ~6.6% of a core while sampling. It does not: `top` takes SIGPIPE when the panel's pipe closes and exits within one 2s interval. Checked with `kill -9` and recorded as an invariant.
 
 Idle cost of the controller, release build: ~0.04% of one core, 61 MB resident. The memory is what a second always-resident process actually costs here, not the CPU.
 
-**Panel hides when its display is absent**
+### Panel hides when its display is absent
 
 The review's altitude finding was that the controller treated a symptom. `targetScreen()` fell back to any external display and then to the built-in one, so undocking re-seated the panel onto the laptop screen above the menu bar; the menu bar item made that dismissable but did not stop it happening.
 
@@ -110,7 +110,7 @@ layout chosen from four design directions: three metric columns
 (CPU / memory / storage), each with a hero figure and a top-five process list,
 over a full-width thermal and fan ribbon.
 
-**Landed**
+### Landed
 
 - `StatsyKit`: sampling for CPU ticks, VM counters, swap, storage capacity and
   throughput, SMC temperatures and fans, network totals, and process ranking.
@@ -146,7 +146,7 @@ Four-angle quality review (reuse, simplification, efficiency, altitude) over the
 whole tree, then applied. The efficiency pass benchmarked the sampling paths
 rather than estimating them, which reordered the priorities.
 
-**Performance**
+### Performance
 
 - Thermals decimated to a 5s cadence: the 130-key SMC read was 85% of the app's
   CPU and blocked the engine actor 17ms of every second.
@@ -162,20 +162,20 @@ rather than estimating them, which reordered the priorities.
 
 App CPU dropped 0.8% → 0.2% of one core.
 
-**Correctness of presentation**
+### Correctness of presentation
 
 - The temperature colour ramp (30–90 °C) and the track beneath it (20–100 °C)
   disagreed about what counted as hot. Both now consume
   `Theme.temperatureFraction`.
 
-**Removed**
+### Removed
 
 - `RingBuffer`, `Snapshot.cpuHistory` and the engine plumbing behind them: a
   complete history pipeline maintained every second with no consumer, since the
   chosen layout has no sparkline. `MachineInfo.coreCount` likewise unread.
   Test count 46 → 42, all of the difference being tests for the deleted type.
 
-**Structure**
+### Structure
 
 - `ProcessSource` now yields unranked samples; `MetricsEngine` ranks. The seam
   previously sat above the ranking policy, so a privileged helper would have had
@@ -188,7 +188,7 @@ App CPU dropped 0.8% → 0.2% of one core.
 - Shared `Double.clamped01`, one `Format.decimal`, one scaling primitive behind
   `binary`/`rate`, and `MachineSource` reusing `HostSource`'s sysctl wrappers.
 
-**Skipped**
+### Skipped
 
 - Caching volume capacity behind a refresh interval (9–25 µs/sample — the
   staleness is not worth the state).

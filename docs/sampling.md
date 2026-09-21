@@ -6,7 +6,7 @@ Every figure below was verified against the system tool named beside it.
 ## Sources
 
 | Metric | Source | Checked against |
-|---|---|---|
+| --- | --- | --- |
 | CPU per-core + aggregate | `host_processor_info(PROCESSOR_CPU_LOAD_INFO)` | `top` |
 | Load average | `getloadavg` | `uptime` |
 | Core clusters | `hw.perflevelN.name` / `.physicalcpu` | `sysctl` |
