@@ -70,12 +70,21 @@ public struct RemoteTarget: Sendable, Equatable {
     /// no GPUs and no services, with nothing reporting why.
     public let collectorPrefix: String
 
+    /// Whether the GPU draws from system memory rather than its own VRAM.
+    ///
+    /// A unified-memory host serves models out of the GTT pool, which
+    /// `/proc/meminfo` reports in no bucket at all: with 89 GiB of model
+    /// resident, the buckets read 7 GiB in use. Declared rather than inferred
+    /// from a series' presence, because homelab-ai-1 publishes GPU memory
+    /// figures too — discrete VRAM its own card already accounts for.
+    public let unifiedMemory: Bool
+
     public init(
         sshUser: String, sshHost: String,
         exporterHost: String, exporterPort: Int = 9100, localPort: Int,
         hostName: String, model: String, gpuDescription: String? = nil,
         volumes: [RemoteVolume], diskDevice: String,
-        collectorPrefix: String = "homelab_"
+        collectorPrefix: String = "homelab_", unifiedMemory: Bool = false
     ) {
         self.sshUser = sshUser
         self.sshHost = sshHost
@@ -88,6 +97,7 @@ public struct RemoteTarget: Sendable, Equatable {
         self.volumes = volumes
         self.diskDevice = diskDevice
         self.collectorPrefix = collectorPrefix
+        self.unifiedMemory = unifiedMemory
     }
 
     public var metricsURL: URL? {
@@ -124,7 +134,35 @@ public enum TargetRegistry {
         )
     )
 
-    public static let all: [Target] = [local, homelabAI1]
+    public static let strix = Target(
+        id: "strix",
+        name: "strix",
+        source: .remote(
+            RemoteTarget(
+                // Same shape as ai-1: the exporter binds its LAN address and
+                // UFW keeps it narrow, so the tunnel lands on it from inside.
+                sshUser: "steve",
+                sshHost: "192.168.68.63",
+                exporterHost: "192.168.68.63",
+                localPort: 19163,
+                hostName: "strix",
+                model: "Ryzen AI Max 395 16C/32T",
+                gpuDescription: "Radeon 8060S 128 GB (unified)",
+                volumes: [
+                    RemoteVolume(mountPoint: "/", name: "Root", role: .system),
+                    // NFS from BabyNas; a network volume stays out of the
+                    // storage headline the way ai-1's NAS does.
+                    RemoteVolume(
+                        mountPoint: "/mnt/coldstore", name: "Coldstore", role: .network
+                    ),
+                ],
+                diskDevice: "nvme0n1",
+                unifiedMemory: true
+            )
+        )
+    )
+
+    public static let all: [Target] = [local, homelabAI1, strix]
 
     public static func target(id: String) -> Target? {
         all.first { $0.id == id }

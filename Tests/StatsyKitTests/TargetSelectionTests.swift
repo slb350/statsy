@@ -64,4 +64,25 @@ struct TargetSelectionTests {
         #expect(remote.exporterPort == 9100)
         #expect(remote.metricsURL?.absoluteString == "http://127.0.0.1:19100/metrics")
     }
+
+    @Test("strix resolves, binds its exporter to its LAN address, and owns its own tunnel port")
+    func strixResolves() throws {
+        let target = try #require(TargetRegistry.target(id: "strix"))
+        let remote = try #require(target.remote)
+        // Same bind pattern as ai-1: the exporter listens on the LAN address,
+        // so the tunnel lands on it from inside the host.
+        #expect(remote.sshUser == "steve")
+        #expect(remote.sshHost == "192.168.68.63")
+        #expect(remote.exporterHost == "192.168.68.63")
+        #expect(remote.exporterPort == 9100)
+        #expect(remote.localPort == 19163)
+        #expect(remote.localPort != TargetRegistry.homelabAI1.remote?.localPort)
+        #expect(remote.metricsURL?.absoluteString == "http://127.0.0.1:19163/metrics")
+    }
+
+    @Test("strix declares unified memory; ai-1 stays discrete")
+    func unifiedMemoryDeclaration() throws {
+        #expect(try #require(TargetRegistry.strix.remote).unifiedMemory)
+        #expect(!(try #require(TargetRegistry.homelabAI1.remote).unifiedMemory))
+    }
 }
