@@ -1,6 +1,7 @@
 import Foundation
 
-/// One discrete GPU, as `nvidia-smi` reports it through the fleet collector.
+/// One discrete GPU, as the fleet collector reports it: nvidia-smi on a discrete
+/// host, the amdgpu sysfs contract on a unified one.
 ///
 /// Apple silicon has no equivalent reading: its GPU shares system memory and
 /// publishes neither a VRAM figure nor a board power draw, so a local snapshot
@@ -14,6 +15,9 @@ public struct GPUReading: Sendable, Equatable, Identifiable {
     public let watts: Double
     public let wattLimit: Double
     public let celsius: Double
+    /// What the memory figures are called on this card: `VRAM` on a discrete
+    /// card, `GTT` where the GPU draws from system memory.
+    public let memoryLabel: String
 
     public var memoryFraction: Double {
         .ratio(memoryUsed, of: memoryTotal)
@@ -26,7 +30,8 @@ public struct GPUReading: Sendable, Equatable, Identifiable {
     public init(
         id: Int, utilization: Double = 0,
         memoryUsed: UInt64 = 0, memoryTotal: UInt64 = 0,
-        watts: Double = 0, wattLimit: Double = 0, celsius: Double = 0
+        watts: Double = 0, wattLimit: Double = 0, celsius: Double = 0,
+        memoryLabel: String = "VRAM"
     ) {
         self.id = id
         self.utilization = utilization
@@ -35,5 +40,6 @@ public struct GPUReading: Sendable, Equatable, Identifiable {
         self.watts = watts
         self.wattLimit = wattLimit
         self.celsius = celsius
+        self.memoryLabel = memoryLabel
     }
 }

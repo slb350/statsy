@@ -242,4 +242,22 @@ struct RemoteMapperStrixTests {
         #expect(!snapshot.gpus.isEmpty)
         #expect(snapshot.memory.gpuShared == 0)
     }
+
+    // MARK: - The lone GTT card
+
+    @Test("reads one card from the GTT pool, not the VRAM carveout")
+    func loneGpu() throws {
+        let gpus = RemoteMapper(target: Self.target).gpus(from: Self.metrics)
+        #expect(gpus.map(\.id) == [0])
+        let gpu = try #require(gpus.first)
+        #expect(gpu.memoryLabel == "GTT")
+        // 128 GiB shared pool; the 512 MiB carveout would read 1 << 29.
+        #expect(gpu.memoryTotal > 120 << 30)
+        #expect(gpu.memoryUsed == Self.metrics.value("homelab_gpu_memory_used_bytes").map(RemoteMapper.bytes))
+        #expect(gpu.utilization >= 0 && gpu.utilization <= 1)
+        // This kernel's amdgpu publishes no power cap.
+        #expect(gpu.wattLimit == 0)
+        #expect(gpu.watts > 0)
+        #expect(gpu.celsius == Self.metrics.value("homelab_gpu_temperature_celsius"))
+    }
 }

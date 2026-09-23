@@ -262,6 +262,7 @@ struct RemoteMapperTests {
         #expect(first.wattLimit == 250)
         #expect(first.powerFraction < 0.1)
         #expect(first.celsius == 38)
+        #expect(first.memoryLabel == "VRAM")
     }
 
     // MARK: - Services and identity

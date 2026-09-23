@@ -20,9 +20,17 @@ struct GPUBand: View {
         HStack(spacing: 9) {
             ForEach(gpus) { gpu in
                 GPUCard(gpu: gpu)
+                    // A lone card keeps the width it would have had as one of
+                    // three and centres: stretched across 1280 its figures
+                    // float apart and the pane reads as broken.
+                    .frame(maxWidth: gpus.count == 1 ? Self.cardWidth : .infinity)
             }
         }
+        .frame(maxWidth: .infinity, alignment: gpus.count == 1 ? .center : .leading)
     }
+
+    /// The share of a three-card band, which a lone card keeps for itself.
+    static let cardWidth: CGFloat = 420
 }
 
 private struct GPUCard: View {
@@ -40,7 +48,7 @@ private struct GPUCard: View {
             title: "GPU \(gpu.id)",
             accent: Theme.yellow,
             meta: "",
-            subtitle: "VRAM",
+            subtitle: gpu.memoryLabel,
             trailing: "\(Format.decimal(gpu.celsius, decimals: 0))°",
             trailingColor: Theme.temperature(gpu.celsius)
         ) {
@@ -73,11 +81,19 @@ private struct GPUCard: View {
                 )
                 MeterCell(
                     label: "Power",
-                    value: "\(Format.decimal(gpu.watts, decimals: 0)) / \(Format.decimal(gpu.wattLimit, decimals: 0)) W",
+                    value: powerText,
                     fraction: gpu.powerFraction,
                     isActive: gpu.watts > 0
                 )
             }
         }
+    }
+
+    /// amdgpu publishes no power cap, so a unified card renders its draw
+    /// alone rather than against a limit of zero.
+    private var powerText: String {
+        gpu.wattLimit > 0
+            ? "\(Format.decimal(gpu.watts, decimals: 0)) / \(Format.decimal(gpu.wattLimit, decimals: 0)) W"
+            : "\(Format.decimal(gpu.watts, decimals: 0)) W"
     }
 }

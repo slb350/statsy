@@ -91,7 +91,8 @@ extension RemoteMapper {
                 memoryTotal: capacity,
                 watts: watts[key] ?? 0,
                 wattLimit: limits[key] ?? 0,
-                celsius: temperatures[key] ?? 0
+                celsius: temperatures[key] ?? 0,
+                memoryLabel: target.unifiedMemory ? "GTT" : "VRAM"
             )
         }
         .sorted { $0.id < $1.id }
