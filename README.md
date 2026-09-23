@@ -41,11 +41,22 @@ That prints one snapshot in a form you can compare directly against `top`, `df`,
 swift run Statsy --render panel.png
 ```
 
+A remote target's layout renders the same way from a captured scrape, with no host attached:
+
+```bash
+swift run Statsy --render panel.png --target strix --fixture Tests/StatsyKitTests/Fixtures/strix.prom
+```
+
 ## Targets
 
 The menu bar item picks which machine the panel shows. The default is this Mac. The other is `homelab-ai-1`, a Threadripper with three RTX 3080s that serves a 27B model, where the reading worth watching is how much VRAM is left.
 
 ![Statsy showing homelab-ai-1](docs/images/panel-homelab-ai-1.png)
+
+The third is `strix`, a Strix Halo whose GPU serves a model out of system
+memory. Nothing in `/proc/meminfo` sees that memory, so its pane carries a
+GPU segment in the memory bar and its lone card reads the shared pool (GTT)
+rather than VRAM.
 
 Switching takes effect on a running panel without restarting it. A remote target has no process telemetry, so the lower half of each column becomes a band of GPU cards, and the ribbon carries unit and endpoint health in place of fan speeds.
 

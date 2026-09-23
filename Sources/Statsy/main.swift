@@ -37,9 +37,34 @@ do {
 
 if let renderIndex = arguments.firstIndex(of: "--render") {
     let path = arguments[arguments.index(after: renderIndex)]
-    let provider = SnapshotProviderFactory.provider(for: selected)
-    let snapshot = await provider.primedSample()
-    await provider.stop()
+
+    let snapshot: Snapshot
+    if let fixtureIndex = arguments.firstIndex(of: "--fixture") {
+        // A fixture renders the remote layout with no host attached: the
+        // mapper is pure, so the same transformation that reads a live
+        // scrape reads a captured one. Two identical scrapes a second apart
+        // leave the cores idle, which is fine — this mode checks layout.
+        let fixturePath = arguments[arguments.index(after: fixtureIndex)]
+        guard let remote = selected.remote,
+              let text = try? String(contentsOfFile: fixturePath, encoding: .utf8)
+        else {
+            FileHandle.standardError.write(
+                Data(("--fixture needs a remote --target and a readable file\n").utf8)
+            )
+            exit(1)
+        }
+        var mapper = RemoteMapper(target: remote)
+        let metrics = MetricSet(text: text, wanted: mapper.wants)
+        let now = Date()
+        _ = mapper.snapshot(from: metrics, now: now, link: LinkStatus(state: .live))
+        snapshot = mapper.snapshot(
+            from: metrics, now: now.addingTimeInterval(2), link: LinkStatus(state: .live)
+        )
+    } else {
+        let provider = SnapshotProviderFactory.provider(for: selected)
+        snapshot = await provider.primedSample()
+        await provider.stop()
+    }
     try PanelRender.write(snapshot: snapshot, to: path)
     print("wrote \(path)")
     exit(0)
