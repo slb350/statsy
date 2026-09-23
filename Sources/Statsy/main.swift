@@ -25,13 +25,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
 let arguments = CommandLine.arguments
 
-/// The value following `flag`, or nil when the flag is absent or is the last
-/// argument: a flag with no value is a usage error, not an index out of range.
+/// The value following `flag`, or nil when the flag is absent, is the last
+/// argument, or is followed by another flag: a flag with no value is a usage
+/// error, not an index out of range, and `--render --fixture out.prom` must not
+/// write a PNG named `--fixture`.
 func argument(after flag: String, in arguments: [String]) -> String? {
     guard let index = arguments.firstIndex(of: flag) else { return nil }
     let next = arguments.index(after: index)
     guard next < arguments.endIndex else { return nil }
-    return arguments[next]
+    let value = arguments[next]
+    guard !value.hasPrefix("--") else { return nil }
+    return value
 }
 
 /// `--target <id>` overrides the recorded selection, which is how the render
@@ -60,7 +64,13 @@ if arguments.contains("--render") {
     }
 
     let snapshot: Snapshot
-    if let fixturePath = argument(after: "--fixture", in: arguments) {
+    // Key off presence, not value: a present `--fixture` with no value must
+    // error, not fall through to a live scrape the user did not ask for.
+    if arguments.contains("--fixture") {
+        guard let fixturePath = argument(after: "--fixture", in: arguments) else {
+            FileHandle.standardError.write(Data("--fixture needs a value\n".utf8))
+            exit(1)
+        }
         // A fixture renders the remote layout with no host attached: the
         // mapper is pure, so the same transformation that reads a live
         // scrape reads a captured one. A priming scrape then a second one
