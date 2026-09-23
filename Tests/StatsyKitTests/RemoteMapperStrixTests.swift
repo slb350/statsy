@@ -48,13 +48,16 @@ struct RemoteMapperStrixTests {
     }
 
     @Test("names the host, platform and GPU as declared")
-    func identity() {
+    func identity() throws {
         let machine = mapped().machine
         #expect(machine.host == "strix")
         #expect(machine.platformVersion == "Linux 7.0.0-34-generic")
         #expect(machine.summary.contains("RADEON 8060S 128 GB (UNIFIED)"))
         // MemTotal, not the 128 GiB on the sticker — the fixture's own value.
-        #expect(machine.memoryBytes == UInt64(Self.metrics.value("node_memory_MemTotal_bytes") ?? 0))
+        // Pinned, so a fixture that loses the series fails the test rather
+        // than comparing 0 == 0.
+        let memTotal = try #require(Self.metrics.value("node_memory_MemTotal_bytes"))
+        #expect(machine.memoryBytes == UInt64(memTotal))
         #expect(!machine.ranksProcesses)
     }
 
@@ -137,11 +140,14 @@ struct RemoteMapperStrixTests {
     }
 
     @Test("headline capacity covers local storage only")
-    func capacityExcludesTheNAS() {
+    func capacityExcludesTheNAS() throws {
         let storage = mapped().storage
         // Byte-exact: the headline is the fixture's own root filesystem size,
-        // and BabyNas's coldstore cannot leak into it.
-        let rootSize = Self.metrics.value("node_filesystem_size_bytes", ["mountpoint": "/"]) ?? 0
+        // and BabyNas's coldstore cannot leak into it. Pinned, so a fixture
+        // that loses the series fails the test rather than comparing 0 == 0.
+        let rootSize = try #require(
+            Self.metrics.value("node_filesystem_size_bytes", ["mountpoint": "/"])
+        )
         #expect(storage.total == RemoteMapper.bytes(rootSize))
         // The declared /mnt/coldstore automount carries no capacity series in
         // this fixture (the collector's `filesystems` lists only "/"), so it
