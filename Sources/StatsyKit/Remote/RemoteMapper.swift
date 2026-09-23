@@ -38,7 +38,7 @@ public struct RemoteMapper: Sendable {
         return Snapshot(
             machine: machine(from: metrics),
             cpu: cpu,
-            memory: Self.memory(from: metrics),
+            memory: memory(from: metrics),
             storage: storage(from: metrics, elapsed: elapsed),
             thermal: thermal(from: metrics),
             processes: .empty,

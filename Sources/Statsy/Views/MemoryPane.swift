@@ -20,17 +20,16 @@ struct MemoryPane: View {
             )
 
             VStack(alignment: .leading, spacing: 4) {
-                SegmentedBar(segments: [
-                    .init(fraction: share(memory.wired), color: Theme.channelWhite),
-                    .init(fraction: share(memory.compressed), color: Theme.purple),
-                    .init(fraction: share(memory.active), color: Theme.yellow),
-                    .init(fraction: share(memory.reclaimable), color: Theme.yellowDim)
-                ])
+                SegmentedBar(segments: segments)
                 HStack(spacing: 0) {
                     legend("WIRE", memory.wired, Theme.channelWhite)
                     Spacer(minLength: 2)
                     legend("CMPR", memory.compressed, Theme.purple)
                     Spacer(minLength: 2)
+                    if memory.gpuShared > 0 {
+                        legend("GPU", memory.gpuShared, Theme.purpleLight)
+                        Spacer(minLength: 2)
+                    }
                     legend("ACTV", memory.active, Theme.yellow)
                     Spacer(minLength: 2)
                     legend("RECL", memory.reclaimable, Theme.yellowDim)
@@ -68,6 +67,28 @@ struct MemoryPane: View {
 
     private func share(_ bytes: UInt64) -> Double {
         .ratio(bytes, of: memory.total)
+    }
+
+    /// The composition bar, with the unified host's GPU-held segment between
+    /// compressed and active: the model's residency, in the bucket list's
+    /// least-to-most-reclaimable order. Purple-light so it cannot blur into
+    /// the yellow of the buckets around it; every non-unified target, which
+    /// has no such memory, draws the pane exactly as before.
+    private var segments: [SegmentedBar.Segment] {
+        var segments = [
+            SegmentedBar.Segment(fraction: share(memory.wired), color: Theme.channelWhite),
+            SegmentedBar.Segment(fraction: share(memory.compressed), color: Theme.purple),
+        ]
+        if memory.gpuShared > 0 {
+            segments.append(
+                SegmentedBar.Segment(fraction: share(memory.gpuShared), color: Theme.purpleLight)
+            )
+        }
+        segments += [
+            SegmentedBar.Segment(fraction: share(memory.active), color: Theme.yellow),
+            SegmentedBar.Segment(fraction: share(memory.reclaimable), color: Theme.yellowDim),
+        ]
+        return segments
     }
 
     private func legend(_ name: String, _ bytes: UInt64, _ color: Color) -> some View {

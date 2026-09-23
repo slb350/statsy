@@ -52,9 +52,12 @@ extension RemoteMapper {
     /// kernel memory is the closest thing Linux has to wired, and zswap is its
     /// compressor. Page cache is reported as reclaimable so an 80 GiB model
     /// sitting in cache does not read as memory pressure.
-    static func memory(from metrics: MetricSet) -> MemoryMetrics {
+    ///
+    /// On a unified-memory target, GPU-held memory joins in use as its own
+    /// category, because no /proc/meminfo bucket contains it.
+    func memory(from metrics: MetricSet) -> MemoryMetrics {
         func value(_ name: String) -> UInt64 {
-            metrics.value("node_memory_\(name)_bytes").map(bytes) ?? 0
+            metrics.value("node_memory_\(name)_bytes").map(Self.bytes) ?? 0
         }
 
         let shared = value("Shmem")
@@ -71,12 +74,22 @@ extension RemoteMapper {
         let swapTotal = value("SwapTotal")
         let swapFree = value("SwapFree")
 
+        // A unified host's model memory never reaches these buckets, so it
+        // is added rather than mapped: the GTT pool holds what the GPU has
+        // taken of system memory, and in use must include it to be true.
+        var gpuShared: UInt64 = 0
+        if target.unifiedMemory {
+            gpuShared = metrics.samples(collector("gpu_memory_used_bytes"))
+                .reduce(UInt64(0)) { $0 + Self.bytes($1.value) }
+        }
+
         return MemoryMetrics(
             total: value("MemTotal"),
-            inUse: active + wired + compressed,
+            inUse: active + wired + compressed + gpuShared,
             wired: wired,
             compressed: compressed,
             active: active,
+            gpuShared: gpuShared,
             reclaimable: reclaimable,
             free: value("MemFree"),
             swapUsed: swapTotal > swapFree ? swapTotal - swapFree : 0,

@@ -30,6 +30,15 @@ public struct MemoryMetrics: Sendable, Equatable {
     public let wired: UInt64
     public let compressed: UInt64
     public let active: UInt64
+    /// GPU-resident memory on a unified host, which no bucket counts.
+    ///
+    /// Strix Halo serves its model out of the GTT pool: TTM pages sit off
+    /// the LRU lists, so `/proc/meminfo` reports an 89 GiB model as nothing
+    /// at all. Counted into in use and drawn as its own segment, because a
+    /// machine that full must not read as 7 GiB used. Zero everywhere else:
+    /// a discrete card's VRAM is its own bar, and Apple Silicon's GPU memory
+    /// is ordinary process memory that already lands in the buckets.
+    public let gpuShared: UInt64
     public let reclaimable: UInt64
     public let free: UInt64
     public let swapUsed: UInt64
@@ -40,14 +49,15 @@ public struct MemoryMetrics: Sendable, Equatable {
 
     public init(
         total: UInt64, inUse: UInt64, wired: UInt64, compressed: UInt64,
-        active: UInt64, reclaimable: UInt64, free: UInt64,
-        swapUsed: UInt64, swapTotal: UInt64
+        active: UInt64, gpuShared: UInt64 = 0,
+        reclaimable: UInt64, free: UInt64, swapUsed: UInt64, swapTotal: UInt64
     ) {
         self.total = total
         self.inUse = inUse
         self.wired = wired
         self.compressed = compressed
         self.active = active
+        self.gpuShared = gpuShared
         self.reclaimable = reclaimable
         self.free = free
         self.swapUsed = swapUsed
@@ -55,7 +65,7 @@ public struct MemoryMetrics: Sendable, Equatable {
     }
 
     public static let zero = MemoryMetrics(
-        total: 0, inUse: 0, wired: 0, compressed: 0, active: 0,
+        total: 0, inUse: 0, wired: 0, compressed: 0, active: 0, gpuShared: 0,
         reclaimable: 0, free: 0, swapUsed: 0, swapTotal: 0
     )
 }

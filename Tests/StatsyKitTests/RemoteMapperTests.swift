@@ -145,6 +145,13 @@ struct RemoteMapperTests {
         #expect(memory.swapUsed < 1 << 20)
     }
 
+    @Test("a discrete host folds no GPU memory into the system totals")
+    func noUnifiedFold() {
+        let memory = mapped().memory
+        #expect(memory.gpuShared == 0)
+        #expect(memory.inUse == memory.active + memory.wired + memory.compressed)
+    }
+
     // MARK: - Storage
 
     @Test("shows every configured mount, including the one node_exporter cannot see")

@@ -190,4 +190,56 @@ struct RemoteMapperStrixTests {
         )
         #expect(declared == mapped())
     }
+
+    // MARK: - Unified memory fold
+
+    @Test("GPU-held memory is counted as in use, because no bucket counts it")
+    func unifiedFold() {
+        let memory = mapped().memory
+        let gpuShared = Self.metrics.samples("homelab_gpu_memory_used_bytes")
+            .reduce(UInt64(0)) { $0 + RemoteMapper.bytes($1.value) }
+        #expect(memory.gpuShared == gpuShared)
+        #expect(memory.gpuShared > 0)
+        #expect(
+            memory.inUse
+                == memory.active + memory.wired + memory.compressed + memory.gpuShared
+        )
+    }
+
+    @Test("non-finite or negative GPU memory contributes nothing")
+    func unifiedFoldDiscardsNonFiniteValues() {
+        let samples = Self.metrics.samples("homelab_gpu_memory_used_bytes").map { sample in
+            MetricSample(name: sample.name, labels: sample.labels, value: -1)
+        }
+        let rest = PrometheusText.parse(Self.fixture()).filter {
+            $0.name != "homelab_gpu_memory_used_bytes"
+        }
+        let poisoned = MetricSet(rest + samples)
+        var mapper = RemoteMapper(target: Self.target)
+        #expect(mapper.snapshot(from: poisoned, now: Self.captured, link: LinkStatus(state: .live)).memory.gpuShared == 0)
+    }
+
+    @Test("no GPU series on a unified host means no fold, not zero memory")
+    func foldAbsentSeries() {
+        let bare = MetricSet(
+            PrometheusText.parse(Self.fixture())
+                .filter { !$0.name.hasPrefix("homelab_gpu_") }
+        )
+        var mapper = RemoteMapper(target: Self.target)
+        let snapshot = mapper.snapshot(from: bare, now: Self.captured, link: LinkStatus(state: .live))
+        #expect(snapshot.gpus.isEmpty)
+        #expect(snapshot.memory.gpuShared == 0)
+        #expect(snapshot.memory.total > 120 << 30)
+    }
+
+    @Test("a discrete host folds nothing even when GPU series are present")
+    func noUnifiedFoldOnDiscreteHosts() {
+        // The gate is the target's declaration, never the series' presence:
+        // mapped through ai-1's target, this fixture's GPU figures are
+        // discrete VRAM that the card's own bar already accounts for.
+        var mapper = RemoteMapper(target: TargetRegistry.homelabAI1.remote!)
+        let snapshot = mapper.snapshot(from: Self.metrics, now: Self.captured, link: LinkStatus(state: .live))
+        #expect(!snapshot.gpus.isEmpty)
+        #expect(snapshot.memory.gpuShared == 0)
+    }
 }
