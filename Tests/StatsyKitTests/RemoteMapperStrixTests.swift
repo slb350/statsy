@@ -6,10 +6,10 @@ import Testing
 ///
 /// Strix is the unified-memory shape: a Strix Halo serving a model out of a
 /// GTT pool `/proc/meminfo` does not see, with GPU figures arriving from the
-/// fleet collector's amdgpu-stage contract pinned into this fixture. The
-/// readings that break here are the ones ai-1 cannot produce — a lone GPU
-/// whose memory is system memory, an NFS automount, GPU temperature arriving
-/// from the textfile beside an amdgpu hwmon chip the cluster map must ignore.
+/// fleet collector's amdgpu stage. The readings that break here are the ones
+/// ai-1 cannot produce — a lone GPU whose memory is system memory, GPU
+/// temperature arriving from the textfile beside an amdgpu hwmon chip the
+/// cluster map must ignore.
 @Suite("Remote mapper — strix")
 struct RemoteMapperStrixTests {
     static let metrics = MetricSet(text: fixture())
@@ -126,14 +126,14 @@ struct RemoteMapperStrixTests {
 
     // MARK: - Storage
 
-    @Test("shows Root; Coldstore's capacity arrives with the collector")
+    @Test("shows Root alone; coldstore is undeclared by contract")
     func volumes() throws {
         let volumes = mapped().storage.volumes
-        // The deployed collector on strix lists only "/" in its `filesystems`
-        // config, so the NFS automount publishes `homelab_mount_present` but
-        // no capacity figures, and node_filesystem_* never sees the automount.
-        // The mapper therefore shows Root alone; when the collector's storage
-        // stage covers /mnt/coldstore this becomes ["Root", "Coldstore"].
+        // /mnt/coldstore is deliberately not among the target's volumes: the
+        // fleet's contract checks that hard NFS mount's presence but never
+        // stats it (a stalled server would wedge the collector past every
+        // timeout), and node_exporter publishes no capacity for it either —
+        // so no safe source can ever fill the row.
         #expect(volumes.map(\.name) == ["Root"])
         let root = try #require(volumes.first)
         #expect(root.fraction >= 0 && root.fraction <= 1)
@@ -149,10 +149,8 @@ struct RemoteMapperStrixTests {
             Self.metrics.value("node_filesystem_size_bytes", ["mountpoint": "/"])
         )
         #expect(storage.total == RemoteMapper.bytes(rootSize))
-        // The declared /mnt/coldstore automount carries no capacity series in
-        // this fixture (the collector's `filesystems` lists only "/"), so it
-        // must be skipped rather than shown.
-        #expect(!storage.volumes.contains { $0.name == "Coldstore" })
+        // No network volume is declared for this host, and none may leak in.
+        #expect(!storage.volumes.contains { $0.role == .network })
     }
 
     // MARK: - Services and link

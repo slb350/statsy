@@ -160,3 +160,17 @@ only day-one GPU visibility on strix does.
 3. Fixture render of strix shows: lone centred GTT card, capless power,
    five-segment memory bar with a purple GPU legend, remote ribbon with
    `flash-next`; ai-1's fixture render is unchanged.
+
+## Addendum — what changed when the collector landed (2026-09-23)
+
+The amdgpu stage shipped in `homelab` branch `strix-amdgpu-collector`
+(`observability/collectors/collect.py`): utilisation, GTT-pool memory, power,
+temperature, no limit — deployed to strix via `install-strix-monitoring.sh`
+with every stage green, and the fixture was re-captured from the live scrape,
+replacing the contract block with real series. One design point fell to a
+contract this spec did not know about: the fleet checks `/mnt/coldstore`'s
+presence but never stats it — a stalled hard NFS mount would wedge the
+collector past every timeout (`test_strix_contract_watches_its_standing_roles`)
+— and node_exporter publishes no capacity for it either. No safe source can
+ever fill a Coldstore row, so the volume was dropped from the target rather
+than declared dead.

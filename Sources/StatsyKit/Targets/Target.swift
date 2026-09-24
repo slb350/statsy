@@ -150,11 +150,11 @@ public enum TargetRegistry {
                 gpuDescription: "Radeon 8060S 128 GB (unified)",
                 volumes: [
                     RemoteVolume(mountPoint: "/", name: "Root", role: .system),
-                    // NFS from BabyNas; a network volume stays out of the
-                    // storage headline the way ai-1's NAS does.
-                    RemoteVolume(
-                        mountPoint: "/mnt/coldstore", name: "Coldstore", role: .network
-                    ),
+                    // /mnt/coldstore (NFS from BabyNas) is deliberately absent:
+                    // the fleet's contract checks its presence but never
+                    // stats it — a stalled hard mount would wedge the
+                    // collector — and node_exporter publishes no capacity for
+                    // it either, so no safe source can ever fill the row.
                 ],
                 diskDevice: "nvme0n1",
                 unifiedMemory: true
