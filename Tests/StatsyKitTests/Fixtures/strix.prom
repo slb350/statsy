@@ -16,7 +16,7 @@ homelab_collector_success{asset_host="strix",collector="cabinet"} 1
 homelab_collector_success{asset_host="strix",collector="local_health"} 1
 homelab_collector_success{asset_host="strix",collector="storage"} 1
 homelab_collector_success{asset_host="strix",collector="units"} 1
-homelab_gpu_memory_total_bytes{asset_host="strix",gpu="0"} 1.37438953472e+11
+homelab_gpu_memory_total_bytes{asset_host="strix",gpu="0"} 1.37975824384e+11
 homelab_gpu_memory_used_bytes{asset_host="strix",gpu="0"} 9.5399182336e+10
 homelab_gpu_power_watts{asset_host="strix",gpu="0"} 6.062
 homelab_gpu_temperature_celsius{asset_host="strix",gpu="0"} 35

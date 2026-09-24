@@ -56,7 +56,7 @@ label shapes, so `RemoteMapper.gpus(from:)` parses strix unchanged:
 
 ```
 homelab_gpu_utilization_percent{asset_host="strix",gpu="0"}   ← gpu_busy_percent
-homelab_gpu_memory_total_bytes{asset_host="strix",gpu="0"}    ← mem_info_gtt_total
+homelab_gpu_memory_total_bytes{asset_host="strix",gpu="0"}    ← mem_info_gtt_total + mem_info_vram_total
 homelab_gpu_memory_used_bytes{asset_host="strix",gpu="0"}     ← mem_info_gtt_used + mem_info_vram_used
 homelab_gpu_power_watts{asset_host="strix",gpu="0"}           ← power1_average / 1e6
 homelab_gpu_temperature_celsius{asset_host="strix",gpu="0"}   ← temp1_input / 1e3
@@ -65,9 +65,7 @@ homelab_gpu_temperature_celsius{asset_host="strix",gpu="0"}   ← temp1_input / 
 Only the `gpu` label is required (the mapper groups on it); `bus`/`uuid`
 are optional and ignored. **No `power_limit_watts`**: the amdgpu sysfs on
 this kernel exposes no cap, so the panel must render limit-less power.
-The memory figures are GTT, not the 512 MiB VRAM carveout — GTT is the
-pool the model lives in and the number that answers "does it fit". A
-`homelab_collector_success{collector="gpu"}` row accompanies the stage.
+The memory figures are the GTT pool the model lives in plus the 512 MiB VRAM carveout, in used and total alike, so used never exceeds total. The GTT total is the kernel's configured 128 GiB ceiling, which exceeds physical RAM, so it does not answer "does it fit"; available system memory does. A `homelab_collector_success{collector="amdgpu"}` row accompanies the stage.
 
 Until the stage is deployed, a panel pointed at strix draws no GPU band
 (`gpus` empty) and no GPU memory segment — graceful degradation, pinned by
@@ -163,7 +161,7 @@ only day-one GPU visibility on strix does.
 
 ## Addendum — what changed when the collector landed (2026-09-23)
 
-The amdgpu stage shipped in `homelab` branch `strix-amdgpu-collector`
+The amdgpu stage shipped in `homelab` branch `strix-amdgpu-collector` and was merged to `main` on 2026-09-24 (`ea24425`, `98d4fa8`), when review added the carveout to the memory total and required the edge temperature sensor
 (`observability/collectors/collect.py`): utilisation, GTT-pool memory, power,
 temperature, no limit — deployed to strix via `install-strix-monitoring.sh`
 with every stage green, and the fixture was re-captured from the live scrape,

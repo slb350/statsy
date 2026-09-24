@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-09-24 — strix GPU total includes the carveout
+
+The homelab amdgpu stage was reviewed and merged to `main` (`ea24425`, `98d4fa8`). Its memory total now adds the 512 MiB VRAM carveout, as used already did, so used can no longer exceed total; series names and labels are unchanged. The fixture's total is the live value under the new contract, the spec and the GTT invariant say the GTT total is a configured ceiling rather than a fit test, and the spec now names the stage's success row `collector="amdgpu"`, as the code and fixture already did.
+
 ## 2026-09-23 — third target: strix
 
 The third target is `strix`, a Strix Halo whose GPU serves a model out of system memory. That memory sits in the GTT pool, off the LRU lists, and appears in no `/proc/meminfo` bucket, so an 89 GiB resident model read as ~7 GiB in use on a nearly full machine — a confident wrong answer, which is the failure the panel exists not to give.
