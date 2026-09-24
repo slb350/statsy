@@ -58,7 +58,7 @@ memory. Nothing in `/proc/meminfo` sees that memory, so its pane carries a
 GPU segment in the memory bar and its lone card reads the shared pool (GTT)
 rather than VRAM.
 
-Switching takes effect on a running panel without restarting it. A remote target has no process telemetry, so the lower half of each column becomes a band of GPU cards, and the ribbon carries unit and endpoint health in place of fan speeds.
+Switching takes effect on a running panel without restarting it. A remote target has no process telemetry, so the lower half of each column has no process lists to show; on a host that publishes GPU figures that space becomes a band of GPU cards, and the ribbon carries unit and endpoint health in place of fan speeds.
 
 Readings come from that host's node_exporter, scraped through an `ssh -L` forward. The host admits port 9100 from its operations server alone, and the forward means that does not have to change: no new listener, no firewall rule and no credential inside the app. The key is ssh's business.
 

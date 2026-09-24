@@ -7,7 +7,8 @@ import Foundation
 /// publishes neither a VRAM figure nor a board power draw, so a local snapshot
 /// carries no cards at all rather than carrying empty ones.
 public struct GPUReading: Sendable, Equatable, Identifiable {
-    /// The `nvidia-smi` device index.
+    /// The collector's `gpu` label — the device index for nvidia-smi and the
+    /// amdgpu stage alike.
     public let id: Int
     public let utilization: Double
     public let memoryUsed: UInt64

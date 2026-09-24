@@ -63,11 +63,17 @@ extension RemoteMapper {
         return result
     }
 
-    /// One reading per discrete card, ordered by device index.
+    /// One reading per card, ordered by device index.
     ///
-    /// Every field comes from the same `nvidia-smi` query, so a card missing
-    /// from one series is missing from all of them; a card whose total VRAM is
-    /// unreadable is dropped rather than drawn as an empty bar.
+    /// The fields do not come from one query: on the amdgpu contract they
+    /// are six sysfs reads, and `power_limit_watts` is absent for the whole
+    /// card, not merely for one field of it. A card is therefore keyed on
+    /// `memory_total_bytes` — an integer `gpu` label with a non-zero
+    /// capacity — and a card missing from that series draws no card. A
+    /// `used` without a `total` still raises the memory headline, because
+    /// the fold in `memory(from:)` sums the `used` series label-free: the
+    /// pane reports physical occupancy, the band reports cards. Deliberate;
+    /// the partial case is pinned by a test.
     func gpus(from metrics: MetricSet) -> [GPUReading] {
         func field(_ name: String) -> [String: Double] {
             metrics.grouped(collector("gpu_\(name)"), by: "gpu")

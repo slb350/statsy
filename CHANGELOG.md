@@ -1,5 +1,31 @@
 # Changelog
 
+## 2026-09-23 — third target: strix
+
+The third target is `strix`, a Strix Halo whose GPU serves a model out of system memory. That memory sits in the GTT pool, off the LRU lists, and appears in no `/proc/meminfo` bucket, so an 89 GiB resident model read as ~7 GiB in use on a nearly full machine — a confident wrong answer, which is the failure the panel exists not to give.
+
+### The fold
+
+On a target that declares `unifiedMemory`, GPU-held memory joins in use as a visible, separate GPU category: in use = active + wired + compressed + gpuShared. The gate is the declaration, never the presence of a series: ai-1 publishes the same `homelab_gpu_memory_used_bytes` figures, and folding them would count VRAM twice — once in the memory pane and once in the card's own bar.
+
+A card is keyed on `memory_total_bytes`, so a `used` sample without a `total` draws no card while still raising the memory headline. That is the pane reporting physical occupancy and the band reporting cards, each doing its own job; the partial state is pinned by a test.
+
+### The lone card
+
+The 512 MiB VRAM carveout answers nothing on a Strix Halo; the model lives in the shared pool, so the card reads GTT. This kernel's amdgpu publishes no power cap, so the card renders power without a limit. Until the collector's amdgpu stage deploys, a panel pointed at strix draws no band and no segment — graceful degradation, pinned — while the fixture carries the contract's figures at their live sysfs values so the layout is exercised anyway.
+
+### Landed
+
+- `TargetRegistry` gains `strix`, with `RemoteTarget.unifiedMemory` declared; the memory pane gains the GPU segment and legend where `gpuShared` is non-zero.
+- `RemoteMapper` gains the fold in `memory(from:)` and keys `gpus(from:)` on `memory_total_bytes`, the amdgpu contract's absent fields defaulting to zero rather than to a fabricated reading.
+- `strix.prom`, a 432-line fixture: a real scrape with the pending amdgpu-stage contract appended, marked as such.
+- `Statsy --render <path> --target <id> --fixture <path>`: one frame of a remote layout from a captured scrape, with no host attached. It refuses a fixture that does not carry the target's own collector metrics, so another machine's scrape cannot stand in for it.
+- 22 tests added across one new suite and two existing ones. Suite total 129 to 151.
+
+### Not done
+
+The homelab collector's amdgpu stage — the change that makes strix's GPU figures real rather than fixture-pinned — lives in the observability repo and lands there. The contract it must meet is the fixture's five `homelab_gpu_*` series, with no power limit among them.
+
 ## 2026-09-21 — the panel gets out of the way of modal alerts
 
 A Finder "empty the Trash?" confirmation opened on the 1280x480 display and vanished under the panel. Finder was app-modal and therefore wedged: no Finder window would open and the Dock icon did nothing, with nothing on screen to explain why. macOS had centred the alert there because the Trash window was parked on that display, and alerts follow their application's key window.

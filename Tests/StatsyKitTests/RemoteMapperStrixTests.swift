@@ -61,7 +61,7 @@ struct RemoteMapperStrixTests {
         #expect(!machine.ranksProcesses)
     }
 
-    // MARK: - Memory buckets (the GPU fold arrives in a later task)
+    // MARK: - Memory buckets and the unified-memory fold
 
     @Test("anonymous and shared pages are active, kernel memory is wired")
     func linuxBuckets() {
@@ -204,6 +204,24 @@ struct RemoteMapperStrixTests {
             memory.inUse
                 == memory.active + memory.wired + memory.compressed + memory.gpuShared
         )
+    }
+
+    @Test("used without total folds into memory but draws no card")
+    func foldWithoutCard() {
+        // The partial state the contract allows: a card is keyed on
+        // `memory_total_bytes`, so without it the band stays empty, while
+        // the fold sums `used` label-free and still raises the headline.
+        let noTotal = MetricSet(
+            PrometheusText.parse(Self.fixture())
+                .filter { $0.name != "homelab_gpu_memory_total_bytes" }
+        )
+        var mapper = RemoteMapper(target: Self.target)
+        let snapshot = mapper.snapshot(from: noTotal, now: Self.captured, link: LinkStatus(state: .live))
+        let gpuShared = Self.metrics.samples("homelab_gpu_memory_used_bytes")
+            .reduce(UInt64(0)) { $0 + RemoteMapper.bytes($1.value) }
+        #expect(snapshot.gpus.isEmpty)
+        #expect(snapshot.memory.gpuShared == gpuShared)
+        #expect(snapshot.memory.gpuShared > 0)
     }
 
     @Test("non-finite or negative GPU memory contributes nothing")
