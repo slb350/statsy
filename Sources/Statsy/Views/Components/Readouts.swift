@@ -112,9 +112,10 @@ struct NetworkReadout: View {
                 traffic(bytes: network.lifetimeOut, symbol: "arrow.up", tint: Theme.yellow)
             }
         }
-        // Fixed rather than flexible: two byte figures need more room than a
-        // single temperature, and were truncating at an equal share.
-        .frame(width: 152, alignment: .leading)
+        // Sized to its figures rather than given a share: two byte totals need
+        // more room than a temperature, and a fixed 152 still cut "151.1 GiB"
+        // to "151.1…".
+        .fixedSize()
     }
 
     private func traffic(bytes: UInt64, symbol: String, tint: Color) -> some View {

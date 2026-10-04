@@ -15,6 +15,11 @@ public struct MetricSet: Sendable, Equatable {
         self.init(PrometheusText.parse(text, wanted: wanted))
     }
 
+    /// The samples `isIncluded` accepts, without re-parsing the scrape.
+    public func filter(_ isIncluded: (MetricSample) -> Bool) -> MetricSet {
+        MetricSet(byName.values.flatMap { $0.filter(isIncluded) })
+    }
+
     public func samples(_ name: String) -> [MetricSample] {
         byName[name] ?? []
     }

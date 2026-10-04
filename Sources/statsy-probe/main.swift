@@ -18,7 +18,7 @@ do {
 }
 
 let provider = SnapshotProviderFactory.provider(for: target)
-let snapshot = await provider.primedSample()
+let snapshot = await provider.settledSample()
 
 print("target    \(target.name)  (\(snapshot.link.state))")
 print("machine   \(snapshot.machine.summary)  \(snapshot.uptimeDescription)")
@@ -46,11 +46,12 @@ print("storage   \(storageUsed)%  free \(storageFree)")
 for volume in snapshot.storage.volumes {
     let name = volume.name.padding(toLength: 8, withPad: " ", startingAt: 0)
     let share = Format.percent(volume.fraction, decimals: 0)
-    print("  \(name)\(Format.binary(volume.used)) / \(Format.binary(volume.total))  \(share)%")
+    print("  \(name)\(Format.binary(volume.used, of: volume.total))  \(share)%")
 }
 let readRate = Format.rate(snapshot.storage.readRate)
 let writeRate = Format.rate(snapshot.storage.writeRate)
-print("  io      read \(readRate)  write \(writeRate)")
+let lifetime = "lifetime read \(Format.binary(snapshot.storage.lifetimeRead))  written \(Format.binary(snapshot.storage.lifetimeWritten))"
+print("  io      read \(readRate)  write \(writeRate)  \(lifetime)")
 
 print("network   in \(Format.binary(snapshot.network.lifetimeIn))  out \(Format.binary(snapshot.network.lifetimeOut))")
 
@@ -64,17 +65,30 @@ for cluster in SensorCluster.allCases {
 }
 
 for gpu in snapshot.gpus {
-    let vram = "\(Format.binary(gpu.memoryUsed)) / \(Format.binary(gpu.memoryTotal))"
+    let vram = Format.binary(gpu.memoryUsed, of: gpu.memoryTotal)
     let share = Format.percent(gpu.memoryFraction, decimals: 0)
     let util = Format.percent(gpu.utilization, decimals: 0)
-    let watts = Format.decimal(gpu.watts, decimals: 0)
-    let limit = Format.decimal(gpu.wattLimit, decimals: 0)
-    print("gpu \(gpu.id)     vram \(vram)  \(share)%  util \(util)%  \(watts)/\(limit)W  \(Format.decimal(gpu.celsius, decimals: 0))C")
+    print("gpu \(gpu.id)     vram \(vram)  \(share)%  util \(util)%  \(gpu.powerDescription)  \(Format.decimal(gpu.celsius, decimals: 0))C")
+}
+
+func printProcesses(_ title: String, _ rows: [ProcessSample], _ value: (ProcessSample) -> String) {
+    print(title)
+    for row in rows {
+        let name = row.name.padding(toLength: 24, withPad: " ", startingAt: 0)
+        print("  \(String(row.id).padding(toLength: 8, withPad: " ", startingAt: 0))\(name)\(value(row))")
+    }
+}
+if snapshot.machine.ranksProcesses {
+    printProcesses("by cpu", snapshot.processes.byCPU) { Format.decimal($0.cpu, decimals: 1) + "%" }
+    printProcesses("by memory", snapshot.processes.byMemory) { Format.binary($0.memory) }
 }
 
 if !snapshot.services.isEmpty {
-    let units = "\(snapshot.services.activeUnits)/\(snapshot.services.totalUnits) units active"
-    let age = snapshot.services.collectionAge.map { "  collected \(Format.decimal($0, decimals: 0))s ago" } ?? ""
+    var units = "\(snapshot.services.activeUnits)/\(snapshot.services.totalUnits) units active"
+    if snapshot.services.totalContainers > 0 {
+        units += ", \(snapshot.services.runningContainers)/\(snapshot.services.totalContainers) containers running"
+    }
+    let age = snapshot.services.collectionAge.map { "  collected \(Format.age($0)) ago" } ?? ""
     print("services  \(units)\(age)")
     for endpoint in snapshot.services.endpoints {
         print("  \(endpoint.name)  \(endpoint.ready ? "ready" : "NOT READY")")

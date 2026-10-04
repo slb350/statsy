@@ -53,7 +53,7 @@ struct MemoryPane: View {
 
             if snapshot.hasProcessTelemetry {
                 VStack(alignment: .leading, spacing: 3) {
-                    SectionLabel(text: "Top processes", trailing: "footprint")
+                    SectionLabel(text: "Top processes", trailing: snapshot.processMemoryLabel)
                     ProcessList(
                         processes: snapshot.processes.byMemory,
                         accent: Theme.yellow,
@@ -96,7 +96,7 @@ struct MemoryPane: View {
     }
 
     private var swapDetail: String {
-        "\(Format.binary(memory.swapUsed)) / \(Format.binary(memory.swapTotal))"
+        Format.binary(memory.swapUsed, of: memory.swapTotal)
     }
 }
 

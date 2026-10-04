@@ -47,62 +47,60 @@ struct StoragePane: View {
                         Text(Format.binary(volume.used))
                             .font(Theme.mono(9.5))
                             .foregroundStyle(Theme.textTertiary)
-                            .frame(width: 58, alignment: .trailing)
+                            // "1023.9 GiB" is the widest Format.binary writes.
+                            .frame(width: 66, alignment: .trailing)
                     }
                     .frame(height: 13)
                 }
             }
 
             VStack(alignment: .leading, spacing: 6) {
-                SectionLabel(
-                    text: showsRateCells ? "Lifetime I/O" : "Throughput",
-                    trailing: showsRateCells ? lifetimeTotal : rateSummary
-                )
-                // The GPU band takes this space on a remote target, so both
-                // the lifetime split and the rate cells go and the throughput
-                // figures move up onto the section label.
-                if showsRateCells {
-                    GeometryReader { geometry in
-                        let available = max(0, geometry.size.width - 2)
-                        HStack(spacing: 2) {
-                            lifetimeCell(
-                                "READ \(Format.binary(storage.lifetimeRead))",
-                                tint: Theme.channelWhite.opacity(0.16),
-                                text: Theme.channelWhite
-                            )
-                            .frame(width: available * readShare)
-                            lifetimeCell(
-                                "WRITE \(Format.binary(storage.lifetimeWritten))",
-                                tint: Theme.purple.opacity(0.2),
-                                text: Theme.purpleLight
-                            )
-                        }
+                SectionLabel(text: "Lifetime I/O", trailing: lifetimeTotal)
+                GeometryReader { geometry in
+                    let available = max(0, geometry.size.width - 2)
+                    HStack(spacing: 2) {
+                        lifetimeCell(
+                            "READ \(Format.binary(storage.lifetimeRead))",
+                            tint: Theme.channelWhite.opacity(0.16),
+                            text: Theme.channelWhite
+                        )
+                        .frame(width: readWidth(of: available))
+                        lifetimeCell(
+                            "WRITE \(Format.binary(storage.lifetimeWritten))",
+                            tint: Theme.purple.opacity(0.2),
+                            text: Theme.purpleLight
+                        )
                     }
-                    .frame(height: 22)
+                }
+                .frame(height: 22)
 
-                    HStack(spacing: 9) {
-                        MeterCell(
-                            label: "Read now",
-                            value: Format.rate(storage.readRate),
-                            valueSize: 22,
-                            isActive: storage.readRate > 0
-                        )
-                        MeterCell(
-                            label: "Write now",
-                            value: Format.rate(storage.writeRate),
-                            valueSize: 22,
-                            isActive: storage.writeRate > 0
-                        )
-                    }
+                HStack(spacing: 9) {
+                    MeterCell(
+                        label: "Read now",
+                        value: Format.rate(storage.readRate),
+                        valueSize: 22,
+                        isActive: storage.readRate > 0
+                    )
+                    MeterCell(
+                        label: "Write now",
+                        value: Format.rate(storage.writeRate),
+                        valueSize: 22,
+                        isActive: storage.writeRate > 0
+                    )
                 }
             }
         }
     }
 
-    private var showsRateCells: Bool { !snapshot.showsGPUBand }
+    /// The narrowest a lifetime cell gets, which still fits "WRITE 999.9 GiB".
+    /// strix had read 79 GiB and written 2.5, and the proportional split
+    /// left the write cell a sliver showing "W". The figures carry the
+    /// numbers; the split only has to lean the right way.
+    private static let minimumCellWidth: CGFloat = 104
 
-    private var rateSummary: String {
-        "↓ \(Format.rate(storage.readRate))  ↑ \(Format.rate(storage.writeRate))"
+    private func readWidth(of available: CGFloat) -> CGFloat {
+        let floor = min(Self.minimumCellWidth, available / 2)
+        return min(max(available * readShare, floor), available - floor)
     }
 
     private var readShare: Double {

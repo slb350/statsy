@@ -12,7 +12,8 @@ struct CPUPane: View {
                 value: Format.percent(cpu.busy),
                 color: Theme.purple,
                 captionLabel: "Load",
-                caption: loadAverage
+                caption: loadAverage,
+                secondary: gpuUtilization
             )
 
             VStack(alignment: .leading, spacing: 4) {
@@ -39,8 +40,8 @@ struct CPUPane: View {
                 )
             }
 
-            // A remote target has no process telemetry, and an empty list
-            // reserving half the pane reads as a panel that is broken.
+            // A target that declares no process ranking gets no list: an empty
+            // one reserving half the pane reads as a panel that is broken.
             if snapshot.hasProcessTelemetry {
                 VStack(alignment: .leading, spacing: 3) {
                     SectionLabel(text: "Top processes", trailing: "% of one core")
@@ -53,6 +54,19 @@ struct CPUPane: View {
                 }
             }
         }
+    }
+
+    /// The unified GPU's utilisation, riding beside the CPU figure because
+    /// the machine has no GPU pane of its own. Yellow, the memory channel's
+    /// colour: on this host the GPU's memory is that channel.
+    private var gpuUtilization: HeroNumber.Secondary? {
+        guard snapshot.showsInlineGPUUtilization, let gpu = snapshot.gpus.first
+        else { return nil }
+        return .init(
+            label: "GPU",
+            value: Format.percent(gpu.utilization, decimals: 0),
+            color: Theme.yellow
+        )
     }
 
     private var loadAverage: String {

@@ -25,6 +25,11 @@ public enum Format {
         return "\(decimal(value, decimals: unit == 0 ? 0 : decimals)) \(binaryUnits[unit])"
     }
 
+    /// A used-of-total pair, e.g. `18.3 GiB / 20.0 GiB`.
+    public static func binary(_ used: UInt64, of total: UInt64) -> String {
+        "\(binary(used)) / \(binary(total))"
+    }
+
     /// Whole gibibytes, as the panel shows memory ("70 / 128 GB").
     public static func gibibytes(_ bytes: UInt64) -> String {
         decimal(Double(bytes) / 1_073_741_824, decimals: 0)
@@ -39,6 +44,18 @@ public enum Format {
     /// A 0...1 fraction rendered as a percentage number without the sign.
     public static func percent(_ fraction: Double, decimals: Int = 1) -> String {
         decimal(fraction * 100, decimals: decimals)
+    }
+
+    /// An age in its largest whole unit, e.g. `42s`, `14m`, `9d`, so a reading
+    /// gone stale for days fits where a seconds count was laid out.
+    public static func age(_ seconds: TimeInterval) -> String {
+        let whole = Int(max(0, seconds))
+        return switch whole {
+        case ..<60: "\(whole)s"
+        case ..<3600: "\(whole / 60)m"
+        case ..<86400: "\(whole / 3600)h"
+        default: "\(whole / 86400)d"
+        }
     }
 
     /// A fixed-precision decimal. The one place the panel formats a number.

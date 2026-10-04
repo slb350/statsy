@@ -4,11 +4,11 @@ import SwiftUI
 /// The whole panel, laid out at exactly 1280x480 to match the target display
 /// one-to-one.
 ///
-/// Two arrangements share that frame. A local target spends the lower half of
-/// each column on ranked processes. A remote one has no process telemetry to
-/// show — node_exporter publishes none — so that space becomes a full-width
-/// band of GPUs, which is the more useful thing to know about the machine this
-/// panel points at anyway.
+/// Every target gets the local panel's three columns, each spending its lower
+/// half on ranked processes. A host with discrete GPUs adds a fourth column
+/// for them. A unified-memory host does not: its GPU's memory is already the
+/// memory pane's GPU segment and its utilisation rides beside the processor's
+/// hero number, so strix draws the same three columns this Mac does.
 struct PanelView: View {
     let snapshot: Snapshot
 
@@ -23,16 +23,14 @@ struct PanelView: View {
                 CPUPane(snapshot: snapshot)
                 MemoryPane(snapshot: snapshot)
                 StoragePane(snapshot: snapshot)
+                if snapshot.showsGPUPane {
+                    GPUPane(gpus: snapshot.gpus, barHeight: snapshot.barHeight)
+                }
             }
             // The flexible row. Everything below it is pinned, so the panes
             // absorb whatever the fixed sections leave and the 480 is never
             // over-allocated.
             .frame(maxHeight: .infinity)
-
-            if snapshot.showsGPUBand {
-                GPUBand(gpus: snapshot.gpus)
-                    .frame(height: GPUBand.height)
-            }
 
             ribbon
                 .frame(height: 54)
@@ -67,8 +65,19 @@ extension Snapshot {
     /// Sampled in this process, so there is no link to report on.
     var isLocal: Bool { link.state == .local }
 
-    /// Whether there are discrete cards worth a band of their own.
-    var showsGPUBand: Bool { !gpus.isEmpty }
+    /// Whether there are discrete cards worth a column of their own.
+    ///
+    /// A unified-memory GPU reports through the memory fold and the processor
+    /// hero instead, so its readings draw no column.
+    var showsGPUPane: Bool { !gpus.isEmpty && !machine.unifiedMemory }
+
+    /// Whether the processor hero carries a GPU utilisation figure.
+    ///
+    /// The unified GPU's only reading that has no other home: its memory is
+    /// the memory pane's GPU segment, its temperature is the ribbon's `.gpu`
+    /// cluster, and its power goes undrawn. Discrete cards show utilisation
+    /// per card in their column; a local target publishes no GPU reading.
+    var showsInlineGPUUtilization: Bool { machine.unifiedMemory && !gpus.isEmpty }
 
     /// Whether this target ranks processes.
     ///
@@ -80,7 +89,15 @@ extension Snapshot {
     /// second after the panel appeared.
     var hasProcessTelemetry: Bool { machine.ranksProcesses }
 
+    /// The memory list's caption, naming what its figure measures.
+    var processMemoryLabel: String {
+        switch machine.processMemory {
+        case .footprint: "footprint"
+        case .resident: "resident"
+        }
+    }
+
     /// Height for a pane's trailing bar, which grows into the room a process
     /// list would otherwise have taken.
-    var barHeight: CGFloat { hasProcessTelemetry ? 30 : 78 }
+    var barHeight: CGFloat { hasProcessTelemetry ? 30 : 170 }
 }

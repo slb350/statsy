@@ -77,56 +77,86 @@ public enum TopParser {
     /// Converts a `top` memory token ("7878M+", "20G", "3616K") to bytes.
     ///
     /// The trailing `+`/`-` marks which way the figure moved since the last
-    /// sample and carries no magnitude.
-    public static func memoryBytes(_ token: String) -> UInt64? {
+    /// sample and carries no magnitude. Units match in either case, because
+    /// procps writes them lower-case; a bare number is in `unscaled` bytes,
+    /// which is 1 for macOS and 1024 for procps' `-e k`.
+    public static func memoryBytes(_ token: String, unscaled: UInt64 = 1) -> UInt64? {
         var text = token.trimmingCharacters(in: .whitespaces)
         if text.hasSuffix("+") || text.hasSuffix("-") { text.removeLast() }
         guard !text.isEmpty else { return nil }
 
-        var multiplier: UInt64 = 1
+        var multiplier = unscaled
         switch text.last {
-        case "K": multiplier = 1024
-        case "M": multiplier = 1024 * 1024
-        case "G": multiplier = 1024 * 1024 * 1024
-        case "T": multiplier = 1024 * 1024 * 1024 * 1024
+        case "K", "k": multiplier = 1024
+        case "M", "m": multiplier = 1024 * 1024
+        case "G", "g": multiplier = 1024 * 1024 * 1024
+        case "T", "t": multiplier = 1024 * 1024 * 1024 * 1024
         default: break
         }
-        if multiplier > 1 { text.removeLast() }
+        if text.last?.isLetter == true { text.removeLast() }
 
         guard let value = Double(text), value >= 0 else { return nil }
         return UInt64(value * Double(multiplier))
     }
 }
 
-/// Accumulates `top -l 0` output and emits one batch per sampling block.
+/// Which `top` is producing the stream: macOS's, or Linux procps'.
+public enum TopDialect: Sendable, Equatable {
+    case darwin
+    case procps
+}
+
+/// Accumulates streamed `top` output and emits one batch per sampling block.
 ///
 /// Streaming a single long-lived `top` avoids a fork/exec per refresh; `top`
 /// itself costs about 9% of a core while sampling, which a monitor should not
-/// pay repeatedly.
+/// pay repeatedly. Both dialects separate blocks the same way, with a header
+/// line and a blank line around each table, so only the row format differs.
 public struct TopStreamParser: Sendable {
-    private var layout: TopParser.ColumnLayout?
+    private enum Layout: Sendable {
+        case darwin(TopParser.ColumnLayout)
+        case procps(ProcpsTopParser.Layout)
+    }
+
+    private let dialect: TopDialect
+    private var layout: Layout?
     private var rows: [ProcessSample] = []
     private var blocksSeen = 0
 
     /// `top`'s first block reports lifetime-average CPU rather than an interval
     /// delta — the same trap that makes `ps` unsuitable — so it is discarded.
+    /// procps' first iteration has no earlier sample to difference against
+    /// either, and is discarded for the same reason.
     public let skipFirstBlock: Bool
 
-    public init(skipFirstBlock: Bool = true) {
+    public init(dialect: TopDialect = .darwin, skipFirstBlock: Bool = true) {
+        self.dialect = dialect
         self.skipFirstBlock = skipFirstBlock
     }
 
     /// Feeds one line in. Returns a completed block when one ends.
     public mutating func consume(_ line: String) -> [ProcessSample]? {
-        if let newLayout = TopParser.layout(header: line) {
+        if let newLayout = header(line) {
             let finished = flush()
             layout = newLayout
             return finished
         }
         guard let layout else { return nil }
-        if line.trimmingCharacters(in: .whitespaces).isEmpty { return flush() }
-        if let sample = TopParser.row(line, layout: layout) { rows.append(sample) }
+        // Checked on the bytes: trimming built a new string for every row.
+        if line.utf8.allSatisfy({ $0 == 0x20 || $0 == 0x09 }) { return flush() }
+        let sample: ProcessSample? = switch layout {
+        case .darwin(let columns): TopParser.row(line, layout: columns)
+        case .procps(let columns): ProcpsTopParser.row(line, layout: columns)
+        }
+        if let sample { rows.append(sample) }
         return nil
+    }
+
+    private func header(_ line: String) -> Layout? {
+        switch dialect {
+        case .darwin: TopParser.layout(header: line).map(Layout.darwin)
+        case .procps: ProcpsTopParser.layout(header: line).map(Layout.procps)
+        }
     }
 
     private mutating func flush() -> [ProcessSample]? {

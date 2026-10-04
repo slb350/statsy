@@ -33,6 +33,23 @@ public extension SnapshotProvider {
         try? await Task.sleep(for: refreshInterval)
         return await sample()
     }
+
+    /// A primed sample that waits, bounded, for the process lists to fill.
+    ///
+    /// `top` discards its first block, so on any target that ranks processes
+    /// the lists land a sample or two after everything else, and a one-shot
+    /// reading would always show them empty.
+    func settledSample(timeout: Duration = .seconds(12)) async -> Snapshot {
+        var snapshot = await primedSample()
+        let clock = ContinuousClock()
+        let deadline = clock.now + timeout
+        while snapshot.machine.ranksProcesses, snapshot.processes.byCPU.isEmpty,
+              clock.now < deadline {
+            try? await Task.sleep(for: refreshInterval)
+            snapshot = await sample()
+        }
+        return snapshot
+    }
 }
 
 extension MetricsEngine: SnapshotProvider {}

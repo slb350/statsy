@@ -24,10 +24,25 @@ public struct RemoteMapper: Sendable {
         self.target = target
     }
 
+    /// Parses a scrape into the series this mapper reads, as the panel and the
+    /// renderer both do.
+    public func metrics(from text: String) -> MetricSet {
+        MetricSet(samples(from: text))
+    }
 
+    /// The wanted samples of one scrape, for a caller merging several.
+    public func samples(from text: String) -> [MetricSample] {
+        PrometheusText.parse(text, wanted: wants)
+    }
+
+    /// `processes` is ranked by the caller: the scrape carries no process
+    /// telemetry, which arrives on its own stream.
     public mutating func snapshot(
-        from metrics: MetricSet, now: Date, link: LinkStatus
+        from metrics: MetricSet, now: Date, link: LinkStatus,
+        processes: ProcessTable = .empty
     ) -> Snapshot {
+        let metrics = scoped(metrics)
+        let memory = memory(from: metrics)
         let elapsed = lastSampledAt.map { now.timeIntervalSince($0) } ?? 0
         lastSampledAt = now
 
@@ -36,18 +51,31 @@ public struct RemoteMapper: Sendable {
         previousTicks = ticks
 
         return Snapshot(
-            machine: machine(from: metrics),
+            machine: machine(from: metrics, memoryTotal: memory.total),
             cpu: cpu,
-            memory: memory(from: metrics),
+            memory: memory,
             storage: storage(from: metrics, elapsed: elapsed),
             thermal: thermal(from: metrics),
-            processes: .empty,
-            network: Self.network(from: metrics),
+            processes: processes,
+            network: network(from: metrics),
             gpus: gpus(from: metrics),
             services: services(from: metrics, now: now),
             uptime: Self.uptime(from: metrics, now: now),
             link: link
         )
+    }
+
+    /// Drops fleet series published on behalf of other hosts.
+    ///
+    /// Legion's collector also publishes BabyNas's and DondeNas's storage,
+    /// containers and timestamps under the same names. Read label-free, a
+    /// panel pointed at Legion would count the NAS hosts' containers as its
+    /// own and take whichever host's timestamp happened to come first.
+    /// Series without the label, which is all of node_exporter's own, pass.
+    func scoped(_ metrics: MetricSet) -> MetricSet {
+        metrics.filter { sample in
+            sample.labels["asset_host"].map { $0 == target.hostName } ?? true
+        }
     }
 
     /// Utilisation, or the previous reading when this scrape cannot support one.
@@ -80,30 +108,26 @@ public struct RemoteMapper: Sendable {
     /// `MachineInfo` is documented as static, and it is: kernel release, total
     /// memory and the target's own description do not move. Rebuilding it 30
     /// times a minute also rebuilt the two header strings it now precomputes.
-    private mutating func machine(from metrics: MetricSet) -> MachineInfo {
+    private mutating func machine(from metrics: MetricSet, memoryTotal: UInt64) -> MachineInfo {
         if let cachedMachine { return cachedMachine }
         let machine = MachineInfo(
             host: target.hostName,
             model: target.model,
-            // One cluster of uniform cores, so the grid draws no divider.
-            clusters: [],
+            clusters: target.clusters,
             gpuDescription: target.gpuDescription,
-            // MemTotal rather than the sticker figure: it excludes memory the
-            // firmware reserved, and it is the denominator the memory pane
-            // already divides by.
-            memoryBytes: metrics.value("node_memory_MemTotal_bytes").map(Self.bytes) ?? 0,
-            ranksProcesses: false,
-            platform: "Linux",
-            osVersion: Self.kernelRelease(from: metrics) ?? ""
+            // The memory pane's own denominator: MemTotal on Linux, which
+            // excludes firmware-reserved memory, rather than the sticker figure.
+            memoryBytes: memoryTotal,
+            ranksProcesses: target.ranksProcesses,
+            processMemory: target.platform.processMemory,
+            unifiedMemory: target.unifiedMemory,
+            platform: target.platform.name,
+            osVersion: osVersion(from: metrics) ?? ""
         )
         // Only kept once the scrape actually carried the host's identity; a
         // partial first response must not pin an empty header forever.
         if machine.memoryBytes > 0 { cachedMachine = machine }
         return machine
-    }
-
-    static func kernelRelease(from metrics: MetricSet) -> String? {
-        metrics.samples("node_uname_info").first?.labels["release"]
     }
 
     static func loadAverage(from metrics: MetricSet) -> LoadAverage {
@@ -119,7 +143,7 @@ public struct RemoteMapper: Sendable {
     /// Not the per-interface `node_network_*_bytes_total` series, because ai-1's
     /// netdev collector fails and publishes none. These totals are what the
     /// panel shows anyway, and they come from the netstat collector instead.
-    static func network(from metrics: MetricSet) -> NetworkMetrics {
+    static func linuxNetwork(from metrics: MetricSet) -> NetworkMetrics {
         NetworkMetrics(
             lifetimeIn: metrics.value("node_netstat_IpExt_InOctets").map(Self.bytes) ?? 0,
             lifetimeOut: metrics.value("node_netstat_IpExt_OutOctets").map(Self.bytes) ?? 0
@@ -131,9 +155,15 @@ public struct RemoteMapper: Sendable {
         return max(0, now.timeIntervalSince1970 - boot)
     }
 
-    /// Unit and endpoint health from the fleet collector's textfile.
+    /// Unit, container and endpoint health from the fleet collector's textfile.
+    ///
+    /// A Mac has LaunchAgents where Linux has systemd units, and the collector
+    /// names them differently; loaded is the Mac's healthy state, since a
+    /// periodic agent is not running between its runs.
     func services(from metrics: MetricSet, now: Date) -> ServiceHealth {
         let units = metrics.samples(collector("service_active"))
+            + metrics.samples(collector("launchagent_loaded"))
+        let containers = metrics.samples(collector("container_running"))
         let endpoints = metrics.samples(collector("service_http_ready"))
             .compactMap { sample -> EndpointReadiness? in
                 guard let name = sample.labels["service"] else { return nil }
@@ -149,6 +179,8 @@ public struct RemoteMapper: Sendable {
         return ServiceHealth(
             activeUnits: units.filter { $0.value != 0 }.count,
             totalUnits: units.count,
+            runningContainers: containers.filter { $0.value != 0 }.count,
+            totalContainers: containers.count,
             endpoints: endpoints,
             collectionAge: age
         )
@@ -180,6 +212,7 @@ public struct RemoteMapper: Sendable {
         Self.wantedNames.contains(name)
             || name.hasPrefix(target.collectorPrefix)
             || name.hasPrefix("node_memory_")
+            || platformWants(name)
     }
 
     /// A fleet metric's full name for this target.

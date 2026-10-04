@@ -1,7 +1,6 @@
 # Statsy
 
-A system monitor for a small secondary display: CPU, memory and storage, each
-above its five heaviest processes, over a strip of temperature and fan readings.
+A system monitor for a small secondary display: CPU and memory above their five heaviest processes, storage beside them, over a strip of temperature and fan readings. It can watch this Mac or any machine in the homelab.
 
 ![Statsy on a mostly idle machine](docs/images/panel.png)
 
@@ -49,16 +48,21 @@ swift run Statsy --render panel.png --target strix --fixture Tests/StatsyKitTest
 
 ## Targets
 
-The menu bar item picks which machine the panel shows. The default is this Mac. The other is `homelab-ai-1`, a Threadripper with three RTX 3080s that serves a 27B model, where the reading worth watching is how much VRAM is left.
+The menu bar item picks which machine the panel shows. The default is this Mac; the others are the homelab machines:
+
+| Target | Machine |
+| --- | --- |
+| `homelab-ai-1` | Threadripper 3960X with three RTX 3080 20 GB cards, serving a 27B model |
+| `strix` | Strix Halo serving a model out of 128 GB of unified memory |
+| `homelab-1` | Core i5-12600K with an RTX 3070 Ti, running the production services |
+| `homelab-legion` | Legion Go (Ryzen Z1 Extreme), the operations control plane |
+| `mac-mini-2`, `mac-mini-3` | M1 Mac minis |
 
 ![Statsy showing homelab-ai-1](docs/images/panel-homelab-ai-1.png)
 
-The third is `strix`, a Strix Halo whose GPU serves a model out of system
-memory. Nothing in `/proc/meminfo` sees that memory, so its pane carries a
-GPU segment in the memory bar and its lone card reads the shared pool (GTT)
-rather than VRAM.
+Every target draws this Mac's three columns, process lists included: the host's own `top` streams over a second SSH session. A host with discrete GPUs adds a fourth column of cards, where the reading worth watching is how much VRAM is left. strix does not, because nothing in `/proc/meminfo` sees the memory its GPU holds; that memory is a GPU segment in the memory bar instead, and the GPU's utilisation sits beside the processor figure. The ribbon carries unit, container and endpoint health in place of fan speeds. The minis' exporter publishes no temperatures, and their ribbon says so.
 
-Switching takes effect on a running panel without restarting it. A remote target has no process telemetry, so the lower half of each column has no process lists to show; on a host that publishes GPU figures that space becomes a band of GPU cards, and the ribbon carries unit and endpoint health in place of fan speeds.
+Switching takes effect on a running panel without restarting it.
 
 Readings come from that host's node_exporter, scraped through an `ssh -L` forward. The host admits port 9100 from its operations server alone, and the forward means that does not have to change: no new listener, no firewall rule and no credential inside the app. The key is ssh's business.
 
@@ -117,12 +121,9 @@ container's block counts, so `/`, `/System/Volumes/Data` and
 
 ## Cost
 
-The panel refreshes at 1 Hz for about 0.2% of one core, plus roughly 1.2% for
-its `top` child. Temperatures sample every five seconds instead: reading all 130
-SMC sensors takes 17 ms of blocked hardware wait, and they move far more slowly
-than that.
+The panel refreshes at 1 Hz for about 1.2% of one core. Its `top` child costs more, around 9.5% of a core with 1,760 processes running, because `top` walks every process on each sample. Temperatures sample every five seconds instead: reading all 130 SMC sensors takes 17 ms of blocked hardware wait, and they move far more slowly than that.
 
-A remote target costs 1.4% of one core here and is polled every two seconds rather than every second, because the scrape lands on the machine being measured and the budget applies there as well.
+A remote target is polled every two seconds rather than every second, because the scrape lands on the machine being measured and the budget applies there as well. Each scrape asks node_exporter for only the collectors the panel reads, and filesystem capacity, which stats every NFS mount, is read every 30 seconds. The streamed `top` costs the host 0.36% of a core on strix and 4.2% on an M1 mini.
 
 ## Palette
 

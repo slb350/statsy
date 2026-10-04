@@ -55,7 +55,7 @@ extension RemoteMapper {
     ///
     /// On a unified-memory target, GPU-held memory joins in use as its own
     /// category, because no /proc/meminfo bucket contains it.
-    func memory(from metrics: MetricSet) -> MemoryMetrics {
+    func linuxMemory(from metrics: MetricSet) -> MemoryMetrics {
         func value(_ name: String) -> UInt64 {
             metrics.value("node_memory_\(name)_bytes").map(Self.bytes) ?? 0
         }
@@ -97,7 +97,7 @@ extension RemoteMapper {
         )
     }
 
-    /// Capacity for the target's listed mounts, plus throughput for its disk.
+    /// Capacity for the target's listed mounts, plus throughput for its disks.
     ///
     /// Two sources, in that order of preference. `node_filesystem_*` is what
     /// `df` reads, and it alone separates space reserved for root from space
@@ -147,10 +147,13 @@ extension RemoteMapper {
             }
         }
 
-        let read = metrics.value("node_disk_read_bytes_total", ["device": target.diskDevice])
-            .map(Self.bytes) ?? 0
-        let written = metrics.value("node_disk_written_bytes_total", ["device": target.diskDevice])
-            .map(Self.bytes) ?? 0
+        func lifetime(_ name: String) -> UInt64 {
+            target.diskDevices.reduce(0) { total, device in
+                total + (metrics.value(name, ["device": device]).map(Self.bytes) ?? 0)
+            }
+        }
+        let read = lifetime("node_disk_read_bytes_total")
+        let written = lifetime("node_disk_written_bytes_total")
         defer { previousIO = (read: read, written: written) }
 
         var readRate = 0.0

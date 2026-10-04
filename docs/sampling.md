@@ -80,3 +80,30 @@ out, matching `netstat -ib`.
 Per-process disk I/O over a one-second window is almost always empty — a live
 sample found one process writing 45 KB. Unlike CPU and memory, an SSD top-five
 would be blank nearly always, so that pane leads with capacity and throughput.
+
+## Remote targets
+
+A remote target is read from its node_exporter through an SSH forward, and its processes from a `top` streamed over a second SSH session. Nothing is installed on the host.
+
+| Metric | Linux (`/proc` families) | macOS (Darwin exporter) | Checked against |
+| --- | --- | --- | --- |
+| CPU per-core | `node_cpu_seconds_total` x 100 into `CPUCalculator` | same | `top` |
+| Memory | `node_memory_*` from `/proc/meminfo`, mapped per CLAUDE.md | `node_memory_{active,wired,compressed,inactive,free}_bytes` | `free`, `vm_stat` |
+| Capacity | `node_filesystem_*`, falling back to `homelab_storage_*` | same; APFS reports the container for every volume | `df` |
+| Throughput | `node_disk_*_bytes_total` summed over `diskDevices` | same | `/sys/block/*/stat` |
+| Network | `node_netstat_IpExt_{In,Out}Octets` | `node_network_*_bytes_total` summed, loopback excluded | `netstat -ib` |
+| Temperatures | `node_hwmon_temp_celsius` by chip driver, GPUs from the fleet textfile | none: the thermal collector is disabled | `nvidia-smi` for GPU temperature |
+| Units, containers, endpoints | `homelab_service_active`, `homelab_container_running`, `homelab_service_http_ready` | `homelab_launchagent_loaded` in place of units | the textfile itself |
+| Processes | `LC_ALL=C top -b -d 2 -w 512 -e k` | `top -l 0 -s 2 -stats pid,command,cpu,mem -n 9999` | `top` |
+
+### Scrape cost
+
+Each scrape asks node_exporter for only the collectors behind those series, through its `collect[]` query parameter, and leaves `filesystem` to a separate scrape every 30 s. On mac-mini-2 a full scrape every 2 s cost the exporter 4.9% of a core, 85% of it in `filesystem` statting the NFS mounts; the split brought it to 1.15%, of which 0.35% is the exporter idling. A filtered Linux scrape is about 45% of the full payload.
+
+### Darwin's counters are 64-bit
+
+The local panel rejects `getifaddrs` because its counters wrap at 4 GiB. node_exporter's Darwin `netdev` collector does not have that problem: en0 on mac-mini-3 read 167,052,517,348 bytes in, matching `netstat -ib` to the byte.
+
+### procps right-aligns its columns
+
+macOS `top` columns are found by header offset because command names contain spaces. procps right-aligns its numbers, so offsets do not line up with values, but every column before COMMAND is a single token. `ProcpsTopParser` splits each row into one field per header column and keeps the remainder as the command.

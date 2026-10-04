@@ -15,12 +15,7 @@ struct RemoteMapperTests {
     /// Close to when the fixture was captured, so ages come out sane.
     static let captured = Date(timeIntervalSince1970: 1_789_943_990)
 
-    static func fixture() -> String {
-        let url = Bundle.module.url(
-            forResource: "homelab-ai-1", withExtension: "prom", subdirectory: "Fixtures"
-        )
-        return (try? String(contentsOf: url!, encoding: .utf8)) ?? ""
-    }
+    static func fixture() -> String { Fixtures.text("homelab-ai-1") }
 
     private func mapped() -> Snapshot {
         var mapper = RemoteMapper(target: Self.target)
@@ -291,6 +286,9 @@ struct RemoteMapperTests {
         #expect(machine.summary.contains("3 × RTX 3080 20 GB".uppercased()))
         // MemTotal, not the 128 GiB on the invoice.
         #expect(machine.memoryBytes > 120 << 30)
+        // Discrete cards: the declaration stays false even though the fixture
+        // carries GPU memory figures.
+        #expect(!machine.unifiedMemory)
     }
 
     @Test("reads host-wide traffic, since the netdev collector is failing")
@@ -332,7 +330,7 @@ struct RemoteMapperTests {
         // of a live scrape and silently never arrive, while the fixture — which
         // is parsed unfiltered — would go on passing every other test here.
         var mapper = RemoteMapper(target: Self.target)
-        let filtered = MetricSet(text: Self.fixture(), wanted: mapper.wants)
+        let filtered = mapper.metrics(from: Self.fixture())
         let declared = mapper.snapshot(
             from: filtered, now: Self.captured, link: LinkStatus(state: .live)
         )
@@ -343,13 +341,7 @@ struct RemoteMapperTests {
     func collectorPrefix() {
         // A host whose collector publishes under another namespace must read as
         // absent rather than silently drawing an empty band.
-        var renamed = RemoteMapper(target: RemoteTarget(
-            sshUser: Self.target.sshUser, sshHost: Self.target.sshHost,
-            exporterHost: Self.target.exporterHost, localPort: Self.target.localPort,
-            hostName: Self.target.hostName, model: Self.target.model,
-            volumes: Self.target.volumes, diskDevice: Self.target.diskDevice,
-            collectorPrefix: "fleet_"
-        ))
+        var renamed = RemoteMapper(target: Self.target.replacing(collectorPrefix: "fleet_"))
         let snapshot = renamed.snapshot(
             from: Self.metrics, now: Self.captured, link: LinkStatus(state: .live)
         )

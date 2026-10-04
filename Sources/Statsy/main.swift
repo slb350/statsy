@@ -85,7 +85,7 @@ if arguments.contains("--render") {
             exit(1)
         }
         var mapper = RemoteMapper(target: remote)
-        let samples = PrometheusText.parse(text, wanted: mapper.wants)
+        let samples = mapper.samples(from: text)
         // The capture must belong to the host it is named after: a scrape of
         // one host rendered under another's target would apply that target's
         // decisions (the unified-memory fold, the volumes) to the wrong
@@ -107,7 +107,7 @@ if arguments.contains("--render") {
         )
     } else {
         let provider = SnapshotProviderFactory.provider(for: selected)
-        snapshot = await provider.primedSample()
+        snapshot = await provider.settledSample()
         await provider.stop()
     }
     try PanelRender.write(snapshot: snapshot, to: path)

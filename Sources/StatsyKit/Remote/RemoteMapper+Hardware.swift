@@ -16,6 +16,10 @@ extension RemoteMapper {
         switch name {
         case "k10temp", "coretemp", "zenpower": .cpu
         case "nvme", "drivetemp": .storage
+        // An APU's graphics block. A host whose collector publishes GPU
+        // temperatures has those replace it, so this is what an integrated
+        // GPU with no collector stage reports through.
+        case "amdgpu": .gpu
         default: nil
         }
     }
@@ -45,8 +49,8 @@ extension RemoteMapper {
             grouped[.gpu] = gpuTemperatures
         }
 
-        // No fan telemetry: ai-1's fans are board-controlled and the cabinet
-        // fan belongs to a different host entirely.
+        // No fan telemetry: no host here publishes an hwmon fan, and strix's
+        // cabinet fan is an on/off relay rather than a speed.
         return ThermalCalculator.metrics(grouped: grouped)
     }
 

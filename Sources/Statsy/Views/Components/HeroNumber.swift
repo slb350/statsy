@@ -6,6 +6,16 @@ struct HeroNumber: View {
     let color: Color
     let captionLabel: String
     let caption: String
+    var secondary: Secondary?
+
+    /// A smaller figure beside the headline, at the same baseline. The
+    /// processor pane uses it for a unified GPU's utilisation, which has no
+    /// pane of its own.
+    struct Secondary {
+        let label: String
+        let value: String
+        let color: Color
+    }
 
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 7) {
@@ -18,6 +28,19 @@ struct HeroNumber: View {
             Text("%")
                 .font(Theme.label(16))
                 .foregroundStyle(Theme.textTertiary)
+            if let secondary {
+                Text(secondary.label.uppercased())
+                    .font(Theme.label(9))
+                    .tracking(1.3)
+                    .foregroundStyle(Theme.textFaint)
+                Text(secondary.value)
+                    .font(Theme.numeral(26))
+                    .foregroundStyle(secondary.color)
+                    .padding(.vertical, -4)
+                Text("%")
+                    .font(Theme.label(10))
+                    .foregroundStyle(Theme.textTertiary)
+            }
             Spacer(minLength: 4)
             VStack(alignment: .trailing, spacing: 2) {
                 Text(captionLabel.uppercased())

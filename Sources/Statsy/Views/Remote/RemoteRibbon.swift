@@ -21,6 +21,17 @@ struct RemoteRibbon: View {
                     TemperatureReadout(label: cluster.label, reading: reading, width: 128)
                 }
             }
+            // Darwin's node_exporter has no working thermal collector on the
+            // minis. Said, so the empty strip does not read as a panel that
+            // failed to draw.
+            if thermal.clusters.isEmpty {
+                VStack(alignment: .leading, spacing: 3) {
+                    SectionLabel(text: "Sensors")
+                    Text("NONE PUBLISHED")
+                        .font(Theme.numeral(15))
+                        .foregroundStyle(Theme.textFaint)
+                }
+            }
 
             Spacer(minLength: 8)
 
@@ -39,31 +50,41 @@ struct RemoteRibbon: View {
         .ribbonBackground()
     }
 
+    /// One dot for the whole host, then a count per kind of thing the
+    /// collector watches. Counts rather than a mark per endpoint: Legion has
+    /// two endpoints and homelab-1 twenty-four containers, and neither fits
+    /// one mark apiece.
     private var serviceReadout: some View {
         VStack(alignment: .leading, spacing: 3) {
             SectionLabel(text: "Services")
-            HStack(spacing: 8) {
-                ForEach(services.endpoints) { endpoint in
-                    HStack(spacing: 4) {
-                        Circle()
-                            .fill(endpoint.ready ? Theme.yellow : Theme.purpleLight)
-                            .frame(width: 6, height: 6)
-                        Text(endpoint.ready ? "READY" : "DOWN")
-                            .font(Theme.numeral(15))
-                            .foregroundStyle(Theme.text)
-                    }
-                }
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Circle()
+                    .fill(services.isHealthy ? Theme.yellow : Theme.purpleLight)
+                    .frame(width: 6, height: 6)
+                    .alignmentGuide(.firstTextBaseline) { $0[.bottom] }
                 if services.totalUnits > 0 {
-                    Text("\(services.activeUnits)/\(services.totalUnits)")
-                        .font(Theme.numeral(15))
-                        .foregroundStyle(services.allUnitsActive ? Theme.text : Theme.purpleLight)
-                    Text("UNITS")
-                        .font(Theme.label(8))
-                        .foregroundStyle(Theme.textFaint)
+                    count(services.activeUnits, of: services.totalUnits, "UNITS")
+                }
+                if services.totalContainers > 0 {
+                    count(services.runningContainers, of: services.totalContainers, "CTRS")
+                }
+                if !services.endpoints.isEmpty {
+                    count(services.readyEndpoints, of: services.endpoints.count, "READY")
                 }
             }
         }
-        .frame(width: 148, alignment: .leading)
+        .fixedSize()
+    }
+
+    private func count(_ up: Int, of total: Int, _ label: String) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 3) {
+            Text("\(up)/\(total)")
+                .font(Theme.numeral(15))
+                .foregroundStyle(up == total ? Theme.text : Theme.purpleLight)
+            Text(label)
+                .font(Theme.label(8))
+                .foregroundStyle(Theme.textFaint)
+        }
     }
 
     private var freshness: some View {
@@ -100,6 +121,6 @@ struct RemoteRibbon: View {
 
     private var collectionAge: String {
         guard let age = services.collectionAge else { return "—" }
-        return "\(Format.decimal(age, decimals: 0))s"
+        return Format.age(age)
     }
 }

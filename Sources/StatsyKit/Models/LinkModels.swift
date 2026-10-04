@@ -40,26 +40,38 @@ public struct LinkStatus: Sendable, Equatable {
 /// runs on a one-minute timer, so this is up to a minute behind everything
 /// node_exporter reads at scrape time.
 public struct ServiceHealth: Sendable, Equatable {
+    /// systemd units on Linux, LaunchAgents on a Mac.
     public let activeUnits: Int
     public let totalUnits: Int
+    public let runningContainers: Int
+    public let totalContainers: Int
     public let endpoints: [EndpointReadiness]
     /// Age of the collector's own run, from its published timestamp.
     public let collectionAge: TimeInterval?
 
     public init(
         activeUnits: Int = 0, totalUnits: Int = 0,
+        runningContainers: Int = 0, totalContainers: Int = 0,
         endpoints: [EndpointReadiness] = [], collectionAge: TimeInterval? = nil
     ) {
         self.activeUnits = activeUnits
         self.totalUnits = totalUnits
+        self.runningContainers = runningContainers
+        self.totalContainers = totalContainers
         self.endpoints = endpoints
         self.collectionAge = collectionAge
     }
 
     public static let empty = ServiceHealth()
 
-    public var isEmpty: Bool { totalUnits == 0 && endpoints.isEmpty }
+    public var isEmpty: Bool { totalUnits == 0 && totalContainers == 0 && endpoints.isEmpty }
     public var allUnitsActive: Bool { activeUnits == totalUnits }
+    public var allContainersRunning: Bool { runningContainers == totalContainers }
+    public var readyEndpoints: Int { endpoints.filter(\.ready).count }
+    /// Everything the collector reports on is up.
+    public var isHealthy: Bool {
+        allUnitsActive && allContainersRunning && readyEndpoints == endpoints.count
+    }
 }
 
 public struct EndpointReadiness: Sendable, Equatable, Identifiable {

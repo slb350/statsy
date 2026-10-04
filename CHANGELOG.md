@@ -1,5 +1,40 @@
 # Changelog
 
+## 2026-10-03 — the whole fleet, with process lists
+
+The panel now covers every homelab machine: homelab-1, homelab-legion, and the two M1 Mac minis join homelab-ai-1 and strix, and every remote target ranks its processes as this Mac does. strix, a unified-memory machine like this one, now draws this Mac's three columns.
+
+### Process lists over SSH
+
+node_exporter publishes nothing per process, so `RemoteProcessSource` streams the host's own `top` over a second SSH session: procps `top -b` on Linux, parsed by the new `ProcpsTopParser`, and on the minis the same macOS `top` the local panel runs. `TopStreamParser` gained a dialect and discards the first block of either. Nothing is installed on any host. The far `top` costs 0.36% of a core on strix, 0.86% on ai-1 and 4.2% on an M1 mini.
+
+### New targets
+
+homelab-1 (one RTX 3070 Ti, two NVMe drives whose throughput is now summed, NAS and coldstore rows) and Legion (amdgpu hwmon now maps to the GPU sensor cluster) are Linux targets. The minis are the first Darwin targets: `RemotePlatform` selects the Mach memory buckets, per-interface network counters (64-bit, matching `netstat -ib`), the product version for the header, and LaunchAgents as units. Their core clusters are declared, efficiency first, which background-QoS busy loops confirmed.
+
+Legion's collector also publishes the NAS hosts' series under the same names. `RemoteMapper.scoped` now drops any fleet sample labelled for another `asset_host`, so Legion counts its own 14 containers rather than adding DondeNas's.
+
+### Layout
+
+Discrete GPUs moved from a full-width band into a fourth column, so the process lists fit on ai-1 and homelab-1. A lone card fills the column the way the other panes are arranged; several cards stack. The core grid wraps onto two rows when its bars would narrow below 7 px, as 48 threads do in four columns. The ribbon's services readout counts units, containers and ready endpoints instead of drawing one mark per endpoint, and the collector age reads in its largest unit ("9d" rather than "862563s"). Three truncations were fixed: network lifetime ("151.1…"), the lifetime write cell, which was a sliver reading "W" on strix, and "1023.9 GiB" in a volume row. The minis' ribbon says no sensors are published rather than sitting empty.
+
+### Scrape cost and an orphaned tunnel
+
+Every scrape now names its node_exporter collectors through `collect[]`, and `filesystem` is read every 30 s on its own. On a mini that took the exporter from 4.9% of a core to 1.15%.
+
+A strix tunnel had been running since 2026-09-24, parented to launchd: an `ssh -N` writes nothing, so it outlived a panel that exited without its asynchronous `stop()`. The tunnel now runs a remote `cat` on a stdin pipe the panel holds, and `kill -9` against the panel was verified to end both SSH sessions and both remote processes.
+
+### Measured
+
+The local cost budget in CLAUDE.md was stale. At 1,760 processes the app costs 1.1–1.2% of a core and its `top` child 9.2–10.1%, identical for the previous build in an A/B run. `top -F -R` saves nothing; setuid `ps` costs about a third as much but reports resident memory rather than footprint, so the local source is unchanged.
+
+### Landed
+
+- `TargetRegistry` split out of `Target.swift`, with four new targets; `RemoteTarget` gains `platform`, `clusters`, `diskDevices` (was `diskDevice`) and `ranksProcesses`.
+- `RemoteMapper+Darwin.swift`, `ProcpsTopParser`, `RemoteProcessSource`, `GPUPane` (replacing `GPUBand`), `TopStream` (the launch-and-parse loop both process sources now share), `Format.age`, `Format.binary(_:of:)`, `GPUReading.powerDescription`, and `settledSample()`, which the probe and the renderer use to wait for the first process block.
+- Four reduced fixtures captured from the new hosts.
+- 41 tests added across four new suites and three existing ones. Suite total 151 to 192.
+
 ## 2026-09-24 — strix GPU total includes the carveout
 
 The homelab amdgpu stage was reviewed and merged to `main` (`ea24425`, `98d4fa8`). Its memory total now adds the 512 MiB VRAM carveout, as used already did, so used can no longer exceed total; series names and labels are unchanged. The fixture's total is the live value under the new contract, the spec and the GTT invariant say the GTT total is a configured ceiling rather than a fit test, and the spec now names the stage's success row `collector="amdgpu"`, as the code and fixture already did.

@@ -33,41 +33,21 @@ public actor TopProcessSource: ProcessSource {
 
     public func current() -> [ProcessSample] { samples }
 
+    /// `top`'s arguments: every process (ranking by memory needs the whole
+    /// list, not just the head of the CPU ordering), four columns, a block
+    /// every `interval` seconds. A remote Mac streams exactly these.
+    static func arguments(interval: Int) -> [String] {
+        ["-l", "0", "-s", "\(interval)", "-stats", "pid,command,cpu,mem", "-n", "9999"]
+    }
+
     public func start() {
         guard process == nil else { return }
-
-        let task = Process()
-        task.executableURL = URL(fileURLWithPath: "/usr/bin/top")
-        // -n 9999 asks for every process: ranking by memory needs the whole
-        // list, not just the head of the CPU ordering.
-        task.arguments = [
-            "-l", "0", "-s", "\(interval)",
-            "-stats", "pid,command,cpu,mem", "-n", "9999"
-        ]
-
-        let pipe = Pipe()
-        task.standardOutput = pipe
-        task.standardError = FileHandle.nullDevice
-
-        do {
-            try task.run()
-        } catch {
-            return
-        }
-        process = task
-
-        let handle = pipe.fileHandleForReading
-        reader = Task { [weak self] in
-            var parser = TopStreamParser()
-            do {
-                for try await line in handle.bytes.lines {
-                    guard let block = parser.consume(line) else { continue }
-                    await self?.ingest(block)
-                }
-            } catch {
-                // The pipe closes when top exits; nothing further to read.
-            }
-        }
+        guard let stream = try? TopStream.launch(
+            "/usr/bin/top", arguments: Self.arguments(interval: interval), dialect: .darwin,
+            onBlock: { [weak self] block in await self?.ingest(block) }
+        ) else { return }
+        process = stream.process
+        reader = stream.reader
     }
 
     public func stop() {

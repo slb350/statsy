@@ -17,10 +17,21 @@ public struct MachineInfo: Sendable, Equatable {
     /// Whether this target can rank processes.
     ///
     /// Stated by the source rather than inferred from the target being remote:
-    /// `ProcessSource` is a seam, and a future privileged helper or a Linux
-    /// process collector must be able to turn this on without the views
-    /// learning anything new.
+    /// `ProcessSource` is a seam, and any source conforming to it turns this
+    /// on without the views learning anything new.
     public let ranksProcesses: Bool
+    /// What the memory list's figure measures.
+    public let processMemory: ProcessMemory
+    /// Whether the GPU draws from system memory rather than its own VRAM.
+    ///
+    /// The same declared seam as `ranksProcesses`: the target says it, and the
+    /// views ask it to decide where a GPU reading is drawn — a column of cards
+    /// for discrete silicon, the memory fold and the processor hero for a
+    /// unified pool. Never inferred from a series' presence: ai-1 publishes
+    /// GPU memory figures that are discrete VRAM its own cards already
+    /// account for. Local sampling publishes no GPU readings at all, so the
+    /// default is never consulted there.
+    public let unifiedMemory: Bool
     /// "macOS" or "Linux". Named so the header does not have to assume.
     public let platform: String
     public let osVersion: String
@@ -36,7 +47,8 @@ public struct MachineInfo: Sendable, Equatable {
     public init(
         host: String = "", model: String = "", clusters: [CPUCluster] = [],
         gpuDescription: String? = nil, memoryBytes: UInt64 = 0,
-        ranksProcesses: Bool = false,
+        ranksProcesses: Bool = false, processMemory: ProcessMemory = .footprint,
+        unifiedMemory: Bool = false,
         platform: String = "macOS", osVersion: String = ""
     ) {
         self.host = host
@@ -45,6 +57,8 @@ public struct MachineInfo: Sendable, Equatable {
         self.gpuDescription = gpuDescription
         self.memoryBytes = memoryBytes
         self.ranksProcesses = ranksProcesses
+        self.processMemory = processMemory
+        self.unifiedMemory = unifiedMemory
         self.platform = platform
         self.osVersion = osVersion
 

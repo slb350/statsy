@@ -28,6 +28,13 @@ public struct GPUReading: Sendable, Equatable, Identifiable {
         wattLimit == 0 ? 0 : watts / wattLimit
     }
 
+    /// Draw against the card's limit. amdgpu publishes no cap, so a card
+    /// without one shows its draw alone rather than against a limit of zero.
+    public var powerDescription: String {
+        let draw = Format.decimal(watts, decimals: 0)
+        return wattLimit > 0 ? "\(draw) / \(Format.decimal(wattLimit, decimals: 0)) W" : "\(draw) W"
+    }
+
     public init(
         id: Int, utilization: Double = 0,
         memoryUsed: UInt64 = 0, memoryTotal: UInt64 = 0,

@@ -21,12 +21,7 @@ struct RemoteMapperStrixTests {
         timeIntervalSince1970: (Self.metrics.value("homelab_collection_timestamp_seconds") ?? 0) + 60
     )
 
-    static func fixture() -> String {
-        let url = Bundle.module.url(
-            forResource: "strix", withExtension: "prom", subdirectory: "Fixtures"
-        )
-        return (try? String(contentsOf: url!, encoding: .utf8)) ?? ""
-    }
+    static func fixture() -> String { Fixtures.text("strix") }
 
     private func mapped() -> Snapshot {
         var mapper = RemoteMapper(target: Self.target)
@@ -58,7 +53,12 @@ struct RemoteMapperStrixTests {
         // than comparing 0 == 0.
         let memTotal = try #require(Self.metrics.value("node_memory_MemTotal_bytes"))
         #expect(machine.memoryBytes == UInt64(memTotal))
-        #expect(!machine.ranksProcesses)
+        // Declared by the target: the lists arrive over a streamed `top`.
+        #expect(machine.ranksProcesses)
+        // The unified declaration reaches the panel: it is what sends strix's
+        // GPU readings to the memory fold and the processor hero instead of a
+        // card band.
+        #expect(machine.unifiedMemory)
     }
 
     // MARK: - Memory buckets and the unified-memory fold
@@ -182,7 +182,7 @@ struct RemoteMapperStrixTests {
     @Test("the declared series cover everything the mapper reads")
     func wantedSeries() {
         var mapper = RemoteMapper(target: Self.target)
-        let filtered = MetricSet(text: Self.fixture(), wanted: mapper.wants)
+        let filtered = mapper.metrics(from: Self.fixture())
         let declared = mapper.snapshot(
             from: filtered, now: Self.captured, link: LinkStatus(state: .live)
         )
@@ -251,9 +251,9 @@ struct RemoteMapperStrixTests {
     @Test("a discrete host folds nothing even when GPU series are present")
     func noUnifiedFoldOnDiscreteHosts() {
         // The gate is the target's declaration, never the series' presence:
-        // mapped through ai-1's target, this fixture's GPU figures are
-        // discrete VRAM that the card's own bar already accounts for.
-        var mapper = RemoteMapper(target: TargetRegistry.homelabAI1.remote!)
+        // mapped through a strix that declared discrete memory, this
+        // fixture's GPU figures are VRAM that the card's own bar accounts for.
+        var mapper = RemoteMapper(target: Self.target.replacing(unifiedMemory: false))
         let snapshot = mapper.snapshot(from: Self.metrics, now: Self.captured, link: LinkStatus(state: .live))
         #expect(!snapshot.gpus.isEmpty)
         #expect(snapshot.memory.gpuShared == 0)
@@ -273,6 +273,8 @@ struct RemoteMapperStrixTests {
         #expect(gpu.utilization >= 0 && gpu.utilization <= 1)
         // This kernel's amdgpu publishes no power cap.
         #expect(gpu.wattLimit == 0)
+        // So the draw is shown alone, never against a limit of zero.
+        #expect(gpu.powerDescription == "6 W")
         #expect(gpu.watts > 0)
         #expect(gpu.celsius == Self.metrics.value("homelab_gpu_temperature_celsius"))
     }

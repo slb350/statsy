@@ -28,8 +28,6 @@ public actor MetricsEngine {
     /// not changed.
     private static let thermalInterval: TimeInterval = 5
 
-    /// Rows shown in each pane's process list.
-    private static let processLimit = 5
     private var thermal = ThermalMetrics.empty
     private var thermalSampledAt: Date?
 
@@ -72,7 +70,7 @@ public actor MetricsEngine {
             memory: sampleMemory(),
             storage: sampleStorage(elapsed: elapsed),
             thermal: sampleThermal(now: now),
-            processes: ProcessTable.ranked(await processes.current(), limit: Self.processLimit),
+            processes: ProcessTable.ranked(await processes.current()),
             network: network.read(),
             uptime: now.timeIntervalSince(bootDate)
         )

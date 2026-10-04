@@ -1,0 +1,193 @@
+import Foundation
+
+/// The targets the panel knows about.
+///
+/// Host facts here come from the homelab repository's `docs/01-hosts.md` and
+/// from each exporter's own unit or compose file; where an exporter listens is
+/// the one fact a wrong guess turns into a tunnel to nothing.
+public enum TargetRegistry {
+    public static let local = Target(id: "local", name: "This Mac", source: .local)
+
+    public static let homelabAI1 = linux(
+        id: "homelab-ai-1", address: "192.168.68.88", localPort: 19100,
+        // UFW admits 9100 from the operations host only, and the listener is
+        // bound to the LAN address rather than loopback, so the tunnel lands
+        // on the host's own address from inside.
+        exporterHost: "192.168.68.88",
+        model: "Threadripper 3960X 24C/48T", gpuDescription: "3 × RTX 3080 20 GB",
+        volumes: [
+            RemoteVolume(mountPoint: "/", name: "Root", role: .system),
+            RemoteVolume(mountPoint: "/srv", name: "Srv", role: .data),
+            RemoteVolume(mountPoint: "/mnt/nas-storage", name: "NAS", role: .network),
+        ],
+        diskDevices: ["nvme0n1"]
+    )
+
+    public static let strix = linux(
+        id: "strix", address: "192.168.68.63", localPort: 19163,
+        // Same shape as ai-1: the exporter binds its LAN address and UFW keeps
+        // it narrow, so the tunnel lands on it from inside.
+        exporterHost: "192.168.68.63",
+        model: "Ryzen AI Max 395 16C/32T", gpuDescription: "Radeon 8060S 128 GB (unified)",
+        volumes: [
+            RemoteVolume(mountPoint: "/", name: "Root", role: .system),
+            // /mnt/coldstore (NFS from BabyNas) is deliberately absent: the
+            // fleet's contract checks its presence but never stats it — a
+            // stalled hard mount would wedge the collector — and node_exporter
+            // publishes no capacity for it either, so no safe source can ever
+            // fill the row.
+        ],
+        diskDevices: ["nvme0n1"],
+        unifiedMemory: true
+    )
+
+    public static let homelab1 = linux(
+        id: "homelab-1", address: "192.168.68.73", localPort: 19173,
+        // The compose file binds the exporter to the LAN address.
+        exporterHost: "192.168.68.73",
+        model: "Core i5-12600K 10C/16T", gpuDescription: "RTX 3070 Ti 8 GB",
+        volumes: [
+            RemoteVolume(mountPoint: "/", name: "Root", role: .system),
+            RemoteVolume(mountPoint: "/srv", name: "Srv", role: .data),
+            // /mnt/nas-media is the same DondeNas export mounted a second
+            // time, so it would only repeat this row.
+            RemoteVolume(mountPoint: "/mnt/nas-storage", name: "NAS", role: .network),
+            // Unlike strix, node_exporter here does stat the coldstore mount
+            // and publishes its capacity, so the row has a source.
+            RemoteVolume(mountPoint: "/mnt/coldstore", name: "Cold", role: .network),
+        ],
+        // / sits on LVM over the first NVMe and /srv on the second.
+        diskDevices: ["nvme0n1", "nvme1n1"]
+    )
+
+    public static let homelabLegion = linux(
+        id: "homelab-legion", address: "192.168.68.72", localPort: 19172,
+        // This exporter listens on every address, so loopback reaches it.
+        exporterHost: "127.0.0.1",
+        model: "Ryzen Z1 Extreme 8C/16T", gpuDescription: "Radeon 780M",
+        volumes: [
+            RemoteVolume(mountPoint: "/", name: "Root", role: .system),
+            RemoteVolume(mountPoint: "/srv", name: "Srv", role: .data),
+            RemoteVolume(mountPoint: "/mnt/nas-storage", name: "NAS", role: .network),
+        ],
+        diskDevices: ["nvme0n1"]
+    )
+
+    /// A Linux host reached as `steve`, named the same in the menu, the header
+    /// and its collector's `asset_host` label.
+    private static func linux(
+        id: String, address: String, localPort: Int, exporterHost: String,
+        model: String, gpuDescription: String, volumes: [RemoteVolume],
+        diskDevices: [String], unifiedMemory: Bool = false
+    ) -> Target {
+        Target(
+            id: id,
+            name: id,
+            source: .remote(
+                RemoteTarget(
+                    sshUser: "steve", sshHost: address,
+                    exporterHost: exporterHost, localPort: localPort,
+                    hostName: id, model: model, gpuDescription: gpuDescription,
+                    volumes: volumes, diskDevices: diskDevices,
+                    unifiedMemory: unifiedMemory
+                )
+            )
+        )
+    }
+
+    public static let macMini2 = macMini(
+        id: "mac-mini-2", address: "192.168.68.82", localPort: 19182,
+        network: [
+            RemoteVolume(
+                mountPoint: "/Users/stephenbrandon/NAS/models", name: "Models", role: .network
+            ),
+            RemoteVolume(
+                mountPoint: "/Users/stephenbrandon/NAS/novels-backups", name: "Backups",
+                role: .network
+            ),
+        ]
+    )
+
+    public static let macMini3 = macMini(
+        id: "mac-mini-3", address: "192.168.68.84", localPort: 19184,
+        network: [
+            RemoteVolume(
+                mountPoint: "/Users/stephenbrandon/NAS/novels-backups", name: "Backups",
+                role: .network
+            ),
+        ]
+    )
+
+    /// The two M1 minis differ only in address and NAS mounts.
+    ///
+    /// Their exporter is a loopback-only LaunchAgent, so the forward lands on
+    /// 127.0.0.1. APFS reports one container's capacity for every volume in
+    /// it, so the Data volume stands for the whole disk.
+    private static func macMini(
+        id: String, address: String, localPort: Int, network: [RemoteVolume]
+    ) -> Target {
+        Target(
+            id: id,
+            name: id,
+            source: .remote(
+                RemoteTarget(
+                    sshUser: "stephenbrandon",
+                    sshHost: address,
+                    exporterHost: "127.0.0.1",
+                    localPort: localPort,
+                    platform: .macOS,
+                    hostName: id,
+                    model: "Apple M1",
+                    gpuDescription: "8-core GPU",
+                    // M1 numbers its efficiency cores first.
+                    clusters: [
+                        CPUCluster(name: "Efficiency", coreCount: 4),
+                        CPUCluster(name: "Performance", coreCount: 4),
+                    ],
+                    volumes: [
+                        RemoteVolume(mountPoint: "/System/Volumes/Data", name: "Data", role: .data)
+                    ] + network,
+                    diskDevices: ["disk0"]
+                )
+            )
+        )
+    }
+
+    public static let all: [Target] = [
+        local, homelabAI1, strix, homelab1, homelabLegion, macMini2, macMini3,
+    ]
+
+    public static func target(id: String) -> Target? {
+        all.first { $0.id == id }
+    }
+}
+
+/// A `--target` argument naming a machine that is not in the registry.
+public struct UnknownTarget: Error, LocalizedError {
+    public let id: String
+
+    public var errorDescription: String? {
+        let known = TargetRegistry.all.map(\.id).joined(separator: ", ")
+        return "unknown target '\(id)'. known targets: \(known)"
+    }
+}
+
+public extension TargetRegistry {
+    /// Resolves a `--target <id>` argument, or `fallback` when the flag is absent.
+    ///
+    /// The wording of the failure lives here rather than in each executable, so
+    /// the panel and the probe cannot drift into answering the same flag
+    /// differently. An unrecognised id throws rather than falling back to the
+    /// local machine: a tool asked to look at another host and quietly
+    /// reporting on this one is worse than refusing.
+    static func target(
+        from arguments: [String], default fallback: @autoclosure () -> Target
+    ) throws -> Target {
+        guard let flag = arguments.firstIndex(of: "--target") else { return fallback() }
+        let next = arguments.index(after: flag)
+        guard next < arguments.endIndex else { throw UnknownTarget(id: "") }
+        let id = arguments[next]
+        guard let target = target(id: id) else { throw UnknownTarget(id: id) }
+        return target
+    }
+}
