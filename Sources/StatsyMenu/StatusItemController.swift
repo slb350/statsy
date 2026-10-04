@@ -32,6 +32,17 @@ final class StatusItemController: NSObject, NSMenuDelegate {
 
         targetMenu.autoenablesItems = false
         targetItem.submenu = targetMenu
+        // Built once: the registry is fixed for the app's lifetime, so a
+        // refresh only re-ticks. Rebuilding on refresh freed the chosen item
+        // while its own action was running, and crashed the app.
+        for target in TargetRegistry.all {
+            let item = NSMenuItem(
+                title: target.name, action: #selector(selectTarget(_:)), keyEquivalent: ""
+            )
+            item.target = self
+            item.representedObject = target.id
+            targetMenu.addItem(item)
+        }
 
         let menu = NSMenu()
         menu.delegate = self
@@ -95,7 +106,8 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         }
     }
 
-    /// Rebuilds the target submenu from the recorded selection.
+    /// Ticks the recorded selection on the items `install()` built, which are
+    /// in `TargetRegistry.all` order, as the presentation's are.
     private func refreshTargets() {
         let presentation = TargetMenuPresentation(selected: selection.read())
         guard presentation != shownTargets else { return }
@@ -103,29 +115,21 @@ final class StatusItemController: NSObject, NSMenuDelegate {
 
         targetItem.title = presentation.title
         targetItem.isHidden = !presentation.isMeaningful
-
-        targetMenu.removeAllItems()
-        for target in presentation.items {
-            let item = NSMenuItem(
-                title: target.title, action: #selector(selectTarget(_:)), keyEquivalent: ""
-            )
-            item.target = self
-            item.isEnabled = true
+        for (item, target) in zip(targetMenu.items, presentation.items) {
             item.state = target.isSelected ? .on : .off
-            item.representedObject = target.id
-            targetMenu.addItem(item)
         }
     }
 
     /// Records the chosen target. A running panel is watching the file and
-    /// repoints itself, so there is nothing to restart here.
+    /// repoints itself, so there is nothing to restart here, and the menu
+    /// re-ticks itself in `menuNeedsUpdate` the next time it opens. Never
+    /// change the menu's items from in here: this runs inside one of them.
     @objc private func selectTarget(_ sender: NSMenuItem) {
         guard let id = sender.representedObject as? String,
               let target = TargetRegistry.target(id: id)
         else { return }
         do {
             try selection.write(target)
-            refreshTargets()
         } catch {
             report(error)
         }

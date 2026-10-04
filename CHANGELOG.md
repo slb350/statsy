@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-10-03 — the menu app no longer crashes on a target switch
+
+Choosing a target crashed Statsy Menu with a segfault in `selectTarget(_:)`. The handler refreshed the submenu, and the refresh removed and rebuilt every item, freeing the item whose action was still running along with the id stored on it. The crash reports' bad addresses were the inline bytes of a host name ("hac-min…"). It surfaced with the new targets because ids like `mac-mini-2` bridge to heap strings, where `local` and `strix` had bridged to tagged pointers that are never freed. The registry is fixed for the app's lifetime, so the items are now built once in `install()` and a refresh only moves the tick; `selectTarget(_:)` no longer refreshes at all, since `menuNeedsUpdate` does before the next open. Fourteen switches through the real menu, driven by System Events, left the app running with the tick and title following each choice. 192 tests pass.
+
 ## 2026-10-03 — the whole fleet, with process lists
 
 The panel now covers every homelab machine: homelab-1, homelab-legion, and the two M1 Mac minis join homelab-ai-1 and strix, and every remote target ranks its processes as this Mac does. strix, a unified-memory machine like this one, now draws this Mac's three columns.
