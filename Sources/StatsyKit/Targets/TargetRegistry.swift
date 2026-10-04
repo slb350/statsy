@@ -77,7 +77,7 @@ public enum TargetRegistry {
     /// and its collector's `asset_host` label.
     private static func linux(
         id: String, address: String, localPort: Int, exporterHost: String,
-        model: String, gpuDescription: String, volumes: [RemoteVolume],
+        model: String, gpuDescription: String? = nil, volumes: [RemoteVolume],
         diskDevices: [String], unifiedMemory: Bool = false
     ) -> Target {
         Target(

@@ -61,6 +61,18 @@ struct RemoteMapperFleetTests {
         )
     }
 
+    @Test("reducing a scrape keeps every line the mapper reads, verbatim", arguments: FleetFixture.all)
+    func reduction(fixture: FleetFixture) {
+        let mapper = RemoteMapper(target: fixture.target)
+        let reduced = PrometheusText.lines(fixture.text, wanted: mapper.wants)
+        // Comments go, and nothing the mapper reads is lost on the way.
+        #expect(reduced.allSatisfy { !$0.hasPrefix("#") })
+        #expect(
+            MetricSet(PrometheusText.parse(reduced.joined(separator: "\n")))
+                == mapper.metrics(from: fixture.text)
+        )
+    }
+
     @Test("every fixture carries its own host's collector series", arguments: FleetFixture.all)
     func ownCollector(fixture: FleetFixture) {
         // The renderer's guard: a capture is accepted for a target only when

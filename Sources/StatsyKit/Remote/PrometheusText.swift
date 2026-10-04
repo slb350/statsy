@@ -49,17 +49,36 @@ public enum PrometheusText {
         return samples
     }
 
+    /// The raw lines of the series `wanted` accepts, comments dropped.
+    ///
+    /// How a fixture is cut from a live scrape: the same filter the mapper
+    /// applies, so a capture keeps exactly what the mapper reads, byte for
+    /// byte as the exporter wrote it.
+    public static func lines(_ text: String, wanted: (String) -> Bool) -> [Substring] {
+        text.split(separator: "\n").filter { line in
+            seriesName(of: line).map { wanted(String($0)) } ?? false
+        }
+    }
+
+    /// A line's metric name, or nil for a comment, a blank or a nameless line.
+    /// The one rule `parse` and `lines` both apply, so a fixture keeps exactly
+    /// the lines a live scrape would parse.
+    private static func seriesName(of line: Substring) -> Substring? {
+        let rest = line.drop(while: \.isWhitespace)
+        guard let first = rest.first, first != "#",
+              let end = rest.firstIndex(where: { $0 == "{" || $0.isWhitespace })
+        else { return nil }
+        let name = rest[..<end]
+        return name.isEmpty ? nil : name
+    }
+
     private static func sample(
         from line: Substring, wanted: (String) -> Bool
     ) -> MetricSample? {
-        var rest = line.drop(while: \.isWhitespace)
-        guard let first = rest.first, first != "#" else { return nil }
-
-        guard let nameEnd = rest.firstIndex(where: { $0 == "{" || $0.isWhitespace })
-        else { return nil }
-        let name = String(rest[..<nameEnd])
-        guard !name.isEmpty, wanted(name) else { return nil }
-        rest = rest[nameEnd...]
+        guard let found = seriesName(of: line) else { return nil }
+        let name = String(found)
+        guard wanted(name) else { return nil }
+        var rest = line[found.endIndex...]
 
         var labels: [String: String] = [:]
         if rest.first == "{" {

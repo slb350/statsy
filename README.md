@@ -62,7 +62,7 @@ The menu bar item picks which machine the panel shows. The default is this Mac; 
 
 Every target draws this Mac's three columns, process lists included: the host's own `top` streams over a second SSH session. A host with discrete GPUs adds a fourth column of cards, where the reading worth watching is how much VRAM is left. strix does not, because nothing in `/proc/meminfo` sees the memory its GPU holds; that memory is a GPU segment in the memory bar instead, and the GPU's utilisation sits beside the processor figure. The ribbon carries unit, container and endpoint health in place of fan speeds. The minis' exporter publishes no temperatures, and their ribbon says so.
 
-Switching takes effect on a running panel without restarting it.
+Switching takes effect on a running panel without restarting it. [docs/adding-a-host.md](docs/adding-a-host.md) covers adding another machine.
 
 Readings come from that host's node_exporter, scraped through an `ssh -L` forward. The host admits port 9100 from its operations server alone, and the forward means that does not have to change: no new listener, no firewall rule and no credential inside the app. The key is ssh's business.
 

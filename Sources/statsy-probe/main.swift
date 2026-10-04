@@ -6,7 +6,8 @@ import StatsyKit
 //
 // With `--target <id>` it does the same for a remote host, which is the only
 // way to check a mapping against `nvidia-smi`, `free` and `df` on the machine
-// the readings came from.
+// the readings came from. `--reduce <scrape>` cuts a raw capture down to a
+// test fixture instead (docs/adding-a-host.md).
 let target: Target
 do {
     target = try TargetRegistry.target(
@@ -15,6 +16,21 @@ do {
 } catch {
     FileHandle.standardError.write(Data((error.localizedDescription + "\n").utf8))
     exit(1)
+}
+
+// `--reduce <scrape>` cuts a raw capture down to what the target's mapper
+// reads, which is how a test fixture is made (docs/adding-a-host.md).
+if CommandLine.arguments.contains("--reduce") {
+    guard let remote = target.remote,
+          let path = argument(after: "--reduce", in: CommandLine.arguments),
+          let text = try? String(contentsOfFile: path, encoding: .utf8)
+    else {
+        FileHandle.standardError.write(Data("usage: statsy-probe --target <remote id> --reduce <scrape.prom>\n".utf8))
+        exit(1)
+    }
+    let mapper = RemoteMapper(target: remote)
+    for line in PrometheusText.lines(text, wanted: mapper.wants).sorted() { print(line) }
+    exit(0)
 }
 
 let provider = SnapshotProviderFactory.provider(for: target)

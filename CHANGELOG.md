@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-03 — a guide to adding hosts
+
+`docs/adding-a-host.md` walks through adding a machine: what the host needs, where each `RemoteTarget` field comes from and what breaks if it is wrong, registering, capturing a fixture, verifying against the host's own tools, and installing, then notes by operating system (including the sites a new `RemotePlatform` case must fill) and by hardware. Its claims were checked against the live fleet, among them that a disabled collector fails the whole scrape with 400 and that unattended SSH to an unknown host key fails outright.
+
+The fixture step had been an ad hoc script that repeated the mapper's series list by hand. `statsy-probe --target <id> --reduce <scrape>` now cuts a raw capture down with the mapper's own `wants`, through the new `PrometheusText.lines(_:wanted:)`, and reproduces the committed homelab-1 fixture byte for byte. The `linux()` registry factory's GPU description became optional, for hosts without one. 1 test added; 193 pass.
+
 ## 2026-10-03 — the menu app no longer crashes on a target switch
 
 Choosing a target crashed Statsy Menu with a segfault in `selectTarget(_:)`. The handler refreshed the submenu, and the refresh removed and rebuilt every item, freeing the item whose action was still running along with the id stored on it. The crash reports' bad addresses were the inline bytes of a host name ("hac-min…"). It surfaced with the new targets because ids like `mac-mini-2` bridge to heap strings, where `local` and `strix` had bridged to tagged pointers that are never freed. The registry is fixed for the app's lifetime, so the items are now built once in `install()` and a refresh only moves the tick; `selectTarget(_:)` no longer refreshes at all, since `menuNeedsUpdate` does before the next open. Fourteen switches through the real menu, driven by System Events, left the app running with the tick and title following each choice. 192 tests pass.
