@@ -123,7 +123,7 @@ Finally, measure what watching the host costs it. With the panel pointed there f
 ssh user@address 'p=$(pgrep -n -x top); a=$(ps -o time= -p $p); sleep 60; ps -o time= -p $p; echo "was $a"'
 ```
 
-Record the figures beside the others in CLAUDE.md's cost-budget invariant.
+Record the figures beside the others in CLAUDE.md's cost-budget invariant. The M6 qualification on 2026-10-08 measured `top` at 4.46% and node_exporter at 0.55% of one core over an 84-second CPU-time delta while the installed panel watched it, at about 1,160 processes. The exporter figure includes other fleet polling.
 
 ## 5. Install
 
