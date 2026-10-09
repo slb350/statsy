@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-08 — M6 Mac mini
+
+`mac-mini-m6` joins the Target menu, probe and renderer, using `stephenbrandon@192.168.70.165` and the existing loopback-only exporter. Its 12 cores are grouped in verified CPU index order: 6 Efficiency, 2 Super, 4 Performance. The internal APFS container and Models/Backups NAS mounts follow the existing Darwin mapping; NAS capacity stays outside the headline. The readiness textfile supplies collector age without inventing service or GPU readings. No host services were changed.
+
+A reduced live fixture extends the shared fleet checks, with four new tests for registry configuration, machine/memory, storage and collector identity. Live probe readings were checked against `vm_stat`, `diskutil apfs list`, `df`, `iostat`, `netstat` and `top`; live and fixture renders fit at 1280×480. All 197 tests pass. The repository-wide strict SwiftLint check exposed 33 findings; formatting, names and long lines were corrected, degradation tests split into their own file, and the Linux factory's connection fields grouped without changing target behavior. Strict lint now passes with zero violations.
+
 ## 2026-10-03 — a guide to adding hosts
 
 `docs/adding-a-host.md` walks through adding a machine: what the host needs, where each `RemoteTarget` field comes from and what breaks if it is wrong, registering, capturing a fixture, verifying against the host's own tools, and installing, then notes by operating system (including the sites a new `RemotePlatform` case must fill) and by hardware. Its claims were checked against the live fleet, among them that a disabled collector fails the whole scrape with 400 and that unattended SSH to an unknown host key fails outright.

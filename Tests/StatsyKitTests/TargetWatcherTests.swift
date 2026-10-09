@@ -76,7 +76,6 @@ struct TargetWatcherTests {
         #expect(seen.current.map(\.id) == ["homelab-ai-1", "local"])
     }
 
-
     /// Undock, change the target from the menu, redock. The panel stops
     /// sampling while its display is away, so nothing is watching when the
     /// selection changes; coming back it must notice rather than resume on the

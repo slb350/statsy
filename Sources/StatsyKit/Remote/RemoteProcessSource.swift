@@ -59,7 +59,7 @@ public actor RemoteProcessSource: ProcessSource {
         guard let launched = try? TopStream.launch(
             "/usr/bin/ssh",
             arguments: ["-T"] + SSHOptions.unattended + [
-                target.sshDestination, target.platform.topCommand,
+                target.sshDestination, target.platform.topCommand
             ],
             dialect: target.platform.topDialect,
             onBlock: { [weak self] block in await self?.ingest(block, from: stream) }
@@ -113,6 +113,6 @@ enum SSHOptions {
         // Notice a host that has gone away within ~30s rather than hanging
         // on a dead TCP connection until the kernel gives up.
         "-o", "ServerAliveInterval=10",
-        "-o", "ServerAliveCountMax=3",
+        "-o", "ServerAliveCountMax=3"
     ]
 }

@@ -76,11 +76,11 @@ struct RemoteRibbon: View {
         .fixedSize()
     }
 
-    private func count(_ up: Int, of total: Int, _ label: String) -> some View {
+    private func count(_ active: Int, of total: Int, _ label: String) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: 3) {
-            Text("\(up)/\(total)")
+            Text("\(active)/\(total)")
                 .font(Theme.numeral(15))
-                .foregroundStyle(up == total ? Theme.text : Theme.purpleLight)
+                .foregroundStyle(active == total ? Theme.text : Theme.purpleLight)
             Text(label)
                 .font(Theme.label(8))
                 .foregroundStyle(Theme.textFaint)

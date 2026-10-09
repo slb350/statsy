@@ -37,11 +37,11 @@ public struct PanelLocator: Sendable {
         if let sibling = controllerBundle?
             .deletingLastPathComponent()
             .appendingPathComponent(Self.panelBundleName),
-            bundleExists(sibling) {
+           bundleExists(sibling) {
             return sibling
         }
         if let registered = registeredBundle(Self.panelBundleIdentifier),
-            bundleExists(registered) {
+           bundleExists(registered) {
             return registered
         }
         let installed = URL(fileURLWithPath: "/Applications")

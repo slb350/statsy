@@ -66,7 +66,8 @@ for volume in snapshot.storage.volumes {
 }
 let readRate = Format.rate(snapshot.storage.readRate)
 let writeRate = Format.rate(snapshot.storage.writeRate)
-let lifetime = "lifetime read \(Format.binary(snapshot.storage.lifetimeRead))  written \(Format.binary(snapshot.storage.lifetimeWritten))"
+let lifetime = "lifetime read \(Format.binary(snapshot.storage.lifetimeRead))  "
+    + "written \(Format.binary(snapshot.storage.lifetimeWritten))"
 print("  io      read \(readRate)  write \(writeRate)  \(lifetime)")
 
 print("network   in \(Format.binary(snapshot.network.lifetimeIn))  out \(Format.binary(snapshot.network.lifetimeOut))")
@@ -84,7 +85,8 @@ for gpu in snapshot.gpus {
     let vram = Format.binary(gpu.memoryUsed, of: gpu.memoryTotal)
     let share = Format.percent(gpu.memoryFraction, decimals: 0)
     let util = Format.percent(gpu.utilization, decimals: 0)
-    print("gpu \(gpu.id)     vram \(vram)  \(share)%  util \(util)%  \(gpu.powerDescription)  \(Format.decimal(gpu.celsius, decimals: 0))C")
+    let temperature = Format.decimal(gpu.celsius, decimals: 0)
+    print("gpu \(gpu.id)     vram \(vram)  \(share)%  util \(util)%  \(gpu.powerDescription)  \(temperature)C")
 }
 
 func printProcesses(_ title: String, _ rows: [ProcessSample], _ value: (ProcessSample) -> String) {

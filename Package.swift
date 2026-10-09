@@ -17,6 +17,6 @@ let package = Package(
             resources: [.copy("Fixtures")]
         ),
         .testTarget(name: "StatsyControlTests", dependencies: ["StatsyControl", "StatsyKit"]),
-        .testTarget(name: "StatsyWindowingTests", dependencies: ["StatsyWindowing"]),
+        .testTarget(name: "StatsyWindowingTests", dependencies: ["StatsyWindowing"])
     ]
 )

@@ -54,7 +54,7 @@ final class PanelProcess {
         let center = NSWorkspace.shared.notificationCenter
         for name in [
             NSWorkspace.didLaunchApplicationNotification,
-            NSWorkspace.didTerminateApplicationNotification,
+            NSWorkspace.didTerminateApplicationNotification
         ] {
             center.addObserver(forName: name, object: nil, queue: .main) { [weak self] note in
                 let application = note.userInfo?[NSWorkspace.applicationUserInfoKey]

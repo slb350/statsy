@@ -77,7 +77,7 @@ struct MemoryPane: View {
     private var segments: [SegmentedBar.Segment] {
         var segments = [
             SegmentedBar.Segment(fraction: share(memory.wired), color: Theme.channelWhite),
-            SegmentedBar.Segment(fraction: share(memory.compressed), color: Theme.purple),
+            SegmentedBar.Segment(fraction: share(memory.compressed), color: Theme.purple)
         ]
         if memory.gpuShared > 0 {
             segments.append(
@@ -86,7 +86,7 @@ struct MemoryPane: View {
         }
         segments += [
             SegmentedBar.Segment(fraction: share(memory.active), color: Theme.yellow),
-            SegmentedBar.Segment(fraction: share(memory.reclaimable), color: Theme.yellowDim),
+            SegmentedBar.Segment(fraction: share(memory.reclaimable), color: Theme.yellowDim)
         ]
         return segments
     }

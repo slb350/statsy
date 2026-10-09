@@ -57,6 +57,7 @@ The menu bar item picks which machine the panel shows. The default is this Mac; 
 | `homelab-1` | Core i5-12600K with an RTX 3070 Ti, running the production services |
 | `homelab-legion` | Legion Go (Ryzen Z1 Extreme), the operations control plane |
 | `mac-mini-2`, `mac-mini-3` | M1 Mac minis |
+| `mac-mini-m6` | M6 Mac mini, 6 Efficiency + 2 Super + 4 Performance cores |
 
 ![Statsy showing homelab-ai-1](docs/images/panel-homelab-ai-1.png)
 

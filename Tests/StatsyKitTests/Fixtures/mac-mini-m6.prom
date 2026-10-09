@@ -1,0 +1,180 @@
+# Captured 2026-10-08 via SSH from 192.168.70.165, node_exporter on loopback.
+# Reduced with statsy-probe --target mac-mini-m6 --reduce. Apple M6, 16 GiB, macOS 27.0.
+# IODeviceTree order: cpu0-5 Efficiency, cpu6-7 Super, cpu8-11 Performance.
+# The M6 readiness textfile publishes collector age/success, without service or GPU series.
+homelab_collection_timestamp_seconds{asset_host="mac-mini-m6"} 1.791524763e+09
+homelab_collector_success{asset_host="mac-mini-m6",collector="m6_readiness"} 1
+homelab_m6_automation_console 1
+homelab_m6_automation_unlocked 1
+homelab_m6_backup_success_timestamp_seconds 1.791518893e+09
+homelab_m6_commissioned 0
+homelab_m6_gui_recovery_required 0
+homelab_m6_role_running{role="ci-drep"} 0
+homelab_m6_role_running{role="ci-ios"} 0
+homelab_m6_role_running{role="jobsy-gui"} 0
+homelab_m6_role_running{role="jobsy-tunnel"} 1
+homelab_m6_sample_timestamp_seconds 1.791524763e+09
+homelab_m6_workload_busy 0
+node_boot_time_seconds 1.791508516153875e+09
+node_cpu_seconds_total{cpu="0",mode="idle"} 13221.63
+node_cpu_seconds_total{cpu="0",mode="nice"} 0
+node_cpu_seconds_total{cpu="0",mode="system"} 999.88
+node_cpu_seconds_total{cpu="0",mode="user"} 1993.68
+node_cpu_seconds_total{cpu="1",mode="idle"} 13615.48
+node_cpu_seconds_total{cpu="1",mode="nice"} 0
+node_cpu_seconds_total{cpu="1",mode="system"} 832.6
+node_cpu_seconds_total{cpu="1",mode="user"} 1775.4
+node_cpu_seconds_total{cpu="10",mode="idle"} 15850.74
+node_cpu_seconds_total{cpu="10",mode="nice"} 0
+node_cpu_seconds_total{cpu="10",mode="system"} 89.02
+node_cpu_seconds_total{cpu="10",mode="user"} 339.68
+node_cpu_seconds_total{cpu="11",mode="idle"} 15865.8
+node_cpu_seconds_total{cpu="11",mode="nice"} 0
+node_cpu_seconds_total{cpu="11",mode="system"} 83.13
+node_cpu_seconds_total{cpu="11",mode="user"} 331.12
+node_cpu_seconds_total{cpu="2",mode="idle"} 14233.15
+node_cpu_seconds_total{cpu="2",mode="nice"} 0
+node_cpu_seconds_total{cpu="2",mode="system"} 556.16
+node_cpu_seconds_total{cpu="2",mode="user"} 1452.81
+node_cpu_seconds_total{cpu="3",mode="idle"} 14584.52
+node_cpu_seconds_total{cpu="3",mode="nice"} 0
+node_cpu_seconds_total{cpu="3",mode="system"} 415.97
+node_cpu_seconds_total{cpu="3",mode="user"} 1259.55
+node_cpu_seconds_total{cpu="4",mode="idle"} 14801.81
+node_cpu_seconds_total{cpu="4",mode="nice"} 0
+node_cpu_seconds_total{cpu="4",mode="system"} 341.16
+node_cpu_seconds_total{cpu="4",mode="user"} 1126.03
+node_cpu_seconds_total{cpu="5",mode="idle"} 14904.18
+node_cpu_seconds_total{cpu="5",mode="nice"} 0
+node_cpu_seconds_total{cpu="5",mode="system"} 301.81
+node_cpu_seconds_total{cpu="5",mode="user"} 1068.17
+node_cpu_seconds_total{cpu="6",mode="idle"} 15045.75
+node_cpu_seconds_total{cpu="6",mode="nice"} 0
+node_cpu_seconds_total{cpu="6",mode="system"} 343.85
+node_cpu_seconds_total{cpu="6",mode="user"} 883.78
+node_cpu_seconds_total{cpu="7",mode="idle"} 15154.88
+node_cpu_seconds_total{cpu="7",mode="nice"} 0
+node_cpu_seconds_total{cpu="7",mode="system"} 326.09
+node_cpu_seconds_total{cpu="7",mode="user"} 792.48
+node_cpu_seconds_total{cpu="8",mode="idle"} 15800.74
+node_cpu_seconds_total{cpu="8",mode="nice"} 0
+node_cpu_seconds_total{cpu="8",mode="system"} 105.29
+node_cpu_seconds_total{cpu="8",mode="user"} 370.13
+node_cpu_seconds_total{cpu="9",mode="idle"} 15828.74
+node_cpu_seconds_total{cpu="9",mode="nice"} 0
+node_cpu_seconds_total{cpu="9",mode="system"} 96.72
+node_cpu_seconds_total{cpu="9",mode="user"} 352.94
+node_disk_read_bytes_total{device="disk0"} 1.99742386176e+11
+node_disk_read_bytes_total{device="disk4"} 1.932711424e+10
+node_disk_written_bytes_total{device="disk0"} 1.41596102656e+11
+node_disk_written_bytes_total{device="disk4"} 0
+node_filesystem_avail_bytes{device="/dev/disk1s1",device_error="",fstype="apfs",mountpoint="/System/Volumes/iSCPreboot"} 5.5865344e+08
+node_filesystem_avail_bytes{device="/dev/disk1s2",device_error="",fstype="apfs",mountpoint="/System/Volumes/xarts"} 5.5865344e+08
+node_filesystem_avail_bytes{device="/dev/disk1s3",device_error="",fstype="apfs",mountpoint="/System/Volumes/Hardware"} 5.5865344e+08
+node_filesystem_avail_bytes{device="/dev/disk3s1",device_error="",fstype="apfs",mountpoint="/System/Volumes/Update/mnt1"} 9.6258056192e+10
+node_filesystem_avail_bytes{device="/dev/disk3s1s1",device_error="",fstype="apfs",mountpoint="/"} 9.6258048e+10
+node_filesystem_avail_bytes{device="/dev/disk3s2",device_error="",fstype="apfs",mountpoint="/System/Volumes/Preboot"} 9.6258072576e+10
+node_filesystem_avail_bytes{device="/dev/disk3s3",device_error="",fstype="apfs",mountpoint="/Volumes/Recovery"} 9.6258056192e+10
+node_filesystem_avail_bytes{device="/dev/disk3s4",device_error="",fstype="apfs",mountpoint="/System/Volumes/Update"} 9.6258056192e+10
+node_filesystem_avail_bytes{device="/dev/disk3s5",device_error="",fstype="apfs",mountpoint="/System/Volumes/Data"} 9.6258048e+10
+node_filesystem_avail_bytes{device="/dev/disk3s6",device_error="",fstype="apfs",mountpoint="/System/Volumes/VM"} 9.6258072576e+10
+node_filesystem_avail_bytes{device="/dev/disk5s1",device_error="",fstype="apfs",mountpoint="/private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.nfeIps"} 5.03599104e+08
+node_filesystem_avail_bytes{device="192.168.68.77:/volume2/Mac Mini Models",device_error="",fstype="nfs",mountpoint="/Users/stephenbrandon/NAS/models"} 9.4820128768e+11
+node_filesystem_avail_bytes{device="192.168.68.77:/volume3/Novels Gitea Backups",device_error="",fstype="nfs",mountpoint="/Users/stephenbrandon/NAS/novels-backups"} 1.87608619008e+12
+node_filesystem_avail_bytes{device="devices -- file:///Users/m6ci/Library/Containers/com.apple.CoreDevice.CoreDeviceService/Data/",device_error="",fstype="devicefs",mountpoint="/Users/m6ci/Library/Developer/CoreDevice/DeviceFS"} 1.099511627776e+12
+node_filesystem_avail_bytes{device="map auto_home",device_error="",fstype="autofs",mountpoint="/System/Volumes/Data/home"} 0
+node_filesystem_free_bytes{device="/dev/disk1s1",device_error="",fstype="apfs",mountpoint="/System/Volumes/iSCPreboot"} 5.5865344e+08
+node_filesystem_free_bytes{device="/dev/disk1s2",device_error="",fstype="apfs",mountpoint="/System/Volumes/xarts"} 5.5865344e+08
+node_filesystem_free_bytes{device="/dev/disk1s3",device_error="",fstype="apfs",mountpoint="/System/Volumes/Hardware"} 5.5865344e+08
+node_filesystem_free_bytes{device="/dev/disk3s1",device_error="",fstype="apfs",mountpoint="/System/Volumes/Update/mnt1"} 9.6258056192e+10
+node_filesystem_free_bytes{device="/dev/disk3s1s1",device_error="",fstype="apfs",mountpoint="/"} 9.6258048e+10
+node_filesystem_free_bytes{device="/dev/disk3s2",device_error="",fstype="apfs",mountpoint="/System/Volumes/Preboot"} 9.6258072576e+10
+node_filesystem_free_bytes{device="/dev/disk3s3",device_error="",fstype="apfs",mountpoint="/Volumes/Recovery"} 9.6258056192e+10
+node_filesystem_free_bytes{device="/dev/disk3s4",device_error="",fstype="apfs",mountpoint="/System/Volumes/Update"} 9.6258056192e+10
+node_filesystem_free_bytes{device="/dev/disk3s5",device_error="",fstype="apfs",mountpoint="/System/Volumes/Data"} 9.6258048e+10
+node_filesystem_free_bytes{device="/dev/disk3s6",device_error="",fstype="apfs",mountpoint="/System/Volumes/VM"} 9.6258072576e+10
+node_filesystem_free_bytes{device="/dev/disk5s1",device_error="",fstype="apfs",mountpoint="/private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.nfeIps"} 5.03599104e+08
+node_filesystem_free_bytes{device="192.168.68.77:/volume2/Mac Mini Models",device_error="",fstype="nfs",mountpoint="/Users/stephenbrandon/NAS/models"} 9.48218064896e+11
+node_filesystem_free_bytes{device="192.168.68.77:/volume3/Novels Gitea Backups",device_error="",fstype="nfs",mountpoint="/Users/stephenbrandon/NAS/novels-backups"} 1.876102967296e+12
+node_filesystem_free_bytes{device="devices -- file:///Users/m6ci/Library/Containers/com.apple.CoreDevice.CoreDeviceService/Data/",device_error="",fstype="devicefs",mountpoint="/Users/m6ci/Library/Developer/CoreDevice/DeviceFS"} 1.099511627776e+12
+node_filesystem_free_bytes{device="map auto_home",device_error="",fstype="autofs",mountpoint="/System/Volumes/Data/home"} 0
+node_filesystem_size_bytes{device="/dev/disk1s1",device_error="",fstype="apfs",mountpoint="/System/Volumes/iSCPreboot"} 5.767168e+08
+node_filesystem_size_bytes{device="/dev/disk1s2",device_error="",fstype="apfs",mountpoint="/System/Volumes/xarts"} 5.767168e+08
+node_filesystem_size_bytes{device="/dev/disk1s3",device_error="",fstype="apfs",mountpoint="/System/Volumes/Hardware"} 5.767168e+08
+node_filesystem_size_bytes{device="/dev/disk3s1",device_error="",fstype="apfs",mountpoint="/System/Volumes/Update/mnt1"} 2.45054767104e+11
+node_filesystem_size_bytes{device="/dev/disk3s1s1",device_error="",fstype="apfs",mountpoint="/"} 2.45054767104e+11
+node_filesystem_size_bytes{device="/dev/disk3s2",device_error="",fstype="apfs",mountpoint="/System/Volumes/Preboot"} 2.45054767104e+11
+node_filesystem_size_bytes{device="/dev/disk3s3",device_error="",fstype="apfs",mountpoint="/Volumes/Recovery"} 2.45054767104e+11
+node_filesystem_size_bytes{device="/dev/disk3s4",device_error="",fstype="apfs",mountpoint="/System/Volumes/Update"} 2.45054767104e+11
+node_filesystem_size_bytes{device="/dev/disk3s5",device_error="",fstype="apfs",mountpoint="/System/Volumes/Data"} 2.45054767104e+11
+node_filesystem_size_bytes{device="/dev/disk3s6",device_error="",fstype="apfs",mountpoint="/System/Volumes/VM"} 2.45054767104e+11
+node_filesystem_size_bytes{device="/dev/disk5s1",device_error="",fstype="apfs",mountpoint="/private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.nfeIps"} 1.85597952e+10
+node_filesystem_size_bytes{device="192.168.68.77:/volume2/Mac Mini Models",device_error="",fstype="nfs",mountpoint="/Users/stephenbrandon/NAS/models"} 9.67089201152e+11
+node_filesystem_size_bytes{device="192.168.68.77:/volume3/Novels Gitea Backups",device_error="",fstype="nfs",mountpoint="/Users/stephenbrandon/NAS/novels-backups"} 1.1857410818048e+13
+node_filesystem_size_bytes{device="devices -- file:///Users/m6ci/Library/Containers/com.apple.CoreDevice.CoreDeviceService/Data/",device_error="",fstype="devicefs",mountpoint="/Users/m6ci/Library/Developer/CoreDevice/DeviceFS"} 1.099511627776e+12
+node_filesystem_size_bytes{device="map auto_home",device_error="",fstype="autofs",mountpoint="/System/Volumes/Data/home"} 0
+node_load1 4.3720703125
+node_load15 2.17431640625
+node_load5 2.57666015625
+node_memory_active_bytes 3.075833856e+09
+node_memory_compressed_bytes 6.717571072e+09
+node_memory_free_bytes 1.83697408e+08
+node_memory_inactive_bytes 3.00269568e+09
+node_memory_internal_bytes 3.754213376e+09
+node_memory_purgeable_bytes 2.37568e+06
+node_memory_swap_total_bytes 2.147483648e+09
+node_memory_swap_used_bytes 8.8440832e+08
+node_memory_swapped_in_bytes_total 1.8763358208e+11
+node_memory_swapped_out_bytes_total 6.521913344e+09
+node_memory_total_bytes 1.7179869184e+10
+node_memory_wired_bytes 3.585540096e+09
+node_network_receive_bytes_total{device="anpi0"} 0
+node_network_receive_bytes_total{device="anpi1"} 0
+node_network_receive_bytes_total{device="anpi3"} 0
+node_network_receive_bytes_total{device="ap1"} 0
+node_network_receive_bytes_total{device="awdl0"} 3.714819e+06
+node_network_receive_bytes_total{device="bridge0"} 0
+node_network_receive_bytes_total{device="en0"} 2.0387693328e+10
+node_network_receive_bytes_total{device="en1"} 1.7436933e+07
+node_network_receive_bytes_total{device="en2"} 0
+node_network_receive_bytes_total{device="en3"} 0
+node_network_receive_bytes_total{device="en4"} 0
+node_network_receive_bytes_total{device="en5"} 0
+node_network_receive_bytes_total{device="en6"} 0
+node_network_receive_bytes_total{device="en7"} 0
+node_network_receive_bytes_total{device="gif0"} 0
+node_network_receive_bytes_total{device="llw0"} 0
+node_network_receive_bytes_total{device="lo0"} 2.4836905e+07
+node_network_receive_bytes_total{device="nan0"} 0
+node_network_receive_bytes_total{device="stf0"} 0
+node_network_receive_bytes_total{device="utun2"} 0
+node_network_receive_bytes_total{device="utun6"} 0
+node_network_receive_bytes_total{device="utun7"} 0
+node_network_receive_bytes_total{device="utun8"} 0
+node_network_receive_bytes_total{device="utun9"} 0
+node_network_transmit_bytes_total{device="anpi0"} 0
+node_network_transmit_bytes_total{device="anpi1"} 0
+node_network_transmit_bytes_total{device="anpi3"} 0
+node_network_transmit_bytes_total{device="ap1"} 0
+node_network_transmit_bytes_total{device="awdl0"} 1.790837e+06
+node_network_transmit_bytes_total{device="bridge0"} 0
+node_network_transmit_bytes_total{device="en0"} 6.45002265e+08
+node_network_transmit_bytes_total{device="en1"} 1.35928e+06
+node_network_transmit_bytes_total{device="en2"} 0
+node_network_transmit_bytes_total{device="en3"} 0
+node_network_transmit_bytes_total{device="en4"} 0
+node_network_transmit_bytes_total{device="en5"} 0
+node_network_transmit_bytes_total{device="en6"} 0
+node_network_transmit_bytes_total{device="en7"} 0
+node_network_transmit_bytes_total{device="gif0"} 0
+node_network_transmit_bytes_total{device="llw0"} 0
+node_network_transmit_bytes_total{device="lo0"} 2.4836905e+07
+node_network_transmit_bytes_total{device="nan0"} 1326
+node_network_transmit_bytes_total{device="stf0"} 0
+node_network_transmit_bytes_total{device="utun2"} 0
+node_network_transmit_bytes_total{device="utun6"} 580
+node_network_transmit_bytes_total{device="utun7"} 80
+node_network_transmit_bytes_total{device="utun8"} 580
+node_network_transmit_bytes_total{device="utun9"} 580
+node_os_info{build_id="26A425",id="",id_like="",image_id="",image_version="",name="macOS",pretty_name="",variant="",variant_id="",version="27.0",version_codename="",version_id="27.0"} 1
+node_uname_info{domainname="local",machine="arm64",nodename="Stephens-Mac-Mini",release="27.0.0",sysname="Darwin",version="Darwin Kernel Version 27.0.0: Tue Aug 11 21:06:15 PDT 2026; root:xnu-13432.1.9~1/RELEASE_ARM64_T8152"} 1

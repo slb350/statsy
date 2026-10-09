@@ -6,6 +6,29 @@ import Testing
 struct TargetRegistryTests {
     private var remotes: [RemoteTarget] { TargetRegistry.all.compactMap(\.remote) }
 
+    @Test("M6 uses its own address and three tiers in CPU index order")
+    func m6Configuration() throws {
+        let target = try #require(TargetRegistry.target(id: "mac-mini-m6"))
+        let remote = try #require(target.remote)
+        #expect(remote.sshDestination == "stephenbrandon@192.168.70.165")
+        #expect(remote.exporterHost == "127.0.0.1")
+        #expect(remote.localPort == 19265)
+        #expect(remote.platform == .macOS)
+        #expect(remote.hostName == "mac-mini-m6")
+        #expect(remote.model == "Apple M6")
+        #expect(remote.gpuDescription == "12-core GPU")
+        #expect(remote.clusters == [
+            CPUCluster(name: "Efficiency", coreCount: 6),
+            CPUCluster(name: "Super", coreCount: 2),
+            CPUCluster(name: "Performance", coreCount: 4)
+        ])
+        #expect(remote.diskDevices == ["disk0"])
+        #expect(remote.volumes.map(\.name) == ["Data", "Models", "Backups"])
+        #expect(remote.ranksProcesses)
+        // Apple GPU occupancy already lives in the Darwin memory buckets.
+        #expect(!remote.unifiedMemory)
+    }
+
     @Test("every remote target owns its own tunnel port")
     func distinctPorts() {
         let ports = remotes.map(\.localPort)
@@ -24,6 +47,7 @@ struct TargetRegistryTests {
         (TargetRegistry.homelabLegion, "steve@192.168.68.72", "127.0.0.1", .linux),
         (TargetRegistry.macMini2, "stephenbrandon@192.168.68.82", "127.0.0.1", .macOS),
         (TargetRegistry.macMini3, "stephenbrandon@192.168.68.84", "127.0.0.1", .macOS),
+        (TargetRegistry.macMiniM6, "stephenbrandon@192.168.70.165", "127.0.0.1", .macOS)
     ])
     func exporterBinding(target: Target, destination: String, exporter: String, platform: RemotePlatform) throws {
         let remote = try #require(target.remote)
@@ -44,12 +68,12 @@ struct TargetRegistryTests {
         #expect(components.path == "/metrics")
         #expect(components.queryItems == [
             URLQueryItem(name: "collect[]", value: "cpu"),
-            URLQueryItem(name: "collect[]", value: "meminfo"),
+            URLQueryItem(name: "collect[]", value: "meminfo")
         ])
     }
 
     @Test("capacity is read on its own cadence and nowhere else", arguments: [
-        RemotePlatform.linux, .macOS,
+        RemotePlatform.linux, .macOS
     ])
     func collectorSplit(platform: RemotePlatform) {
         #expect(platform.capacityCollectors == ["filesystem"])

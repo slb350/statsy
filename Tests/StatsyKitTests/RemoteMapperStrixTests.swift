@@ -73,7 +73,7 @@ struct RemoteMapperStrixTests {
         #expect(
             memory.wired
                 == UInt64(value("SUnreclaim")) + UInt64(value("KernelStack"))
-                    + UInt64(value("PageTables")) + UInt64(value("Percpu"))
+                + UInt64(value("PageTables")) + UInt64(value("Percpu"))
         )
         #expect(memory.total == UInt64(value("MemTotal")))
     }
@@ -84,7 +84,7 @@ struct RemoteMapperStrixTests {
     /// joined through `node_hwmon_chip_names` the way the mapper does.
     private static func readings(forDriver driver: String) -> [Double] {
         guard let chip = Self.metrics.samples("node_hwmon_chip_names")
-            .first(where: { $0.labels["chip_name"] == driver })?.labels["chip"]
+                .first(where: { $0.labels["chip_name"] == driver })?.labels["chip"]
         else { return [] }
         return Self.metrics.samples("node_hwmon_temp_celsius")
             .filter { $0.labels["chip"] == chip }
@@ -232,7 +232,8 @@ struct RemoteMapperStrixTests {
         }
         let poisoned = MetricSet(rest + samples)
         var mapper = RemoteMapper(target: Self.target)
-        #expect(mapper.snapshot(from: poisoned, now: Self.captured, link: LinkStatus(state: .live)).memory.gpuShared == 0)
+        let snapshot = mapper.snapshot(from: poisoned, now: Self.captured, link: LinkStatus(state: .live))
+        #expect(snapshot.memory.gpuShared == 0)
     }
 
     @Test("no GPU series on a unified host means no fold, not zero memory")

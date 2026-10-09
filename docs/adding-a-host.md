@@ -73,6 +73,8 @@ public static let homelab3 = linux(
 
 Another M1 mini goes through `macMini()`. A Mac that is not an M1 mini, with different cores, GPU or user, gets a `RemoteTarget` written out in full, or a second factory once there are two of it.
 
+`mac-mini-m6` is the explicit M6 example: `stephenbrandon@192.168.70.165`, a loopback-only exporter owned by root launchd, workstation port 19265, one internal APFS container plus Models and Backups NAS rows. Its three tiers are declared from CPU node indices, not `hw.perflevel` order; see [Heterogeneous cores](#heterogeneous-cores).
+
 ## 3. Capture a fixture and test
 
 A fixture is the host's scrape cut down to what the mapper reads. It is what the tests map and what `--render --fixture` draws.
@@ -100,7 +102,7 @@ The probe waits for the first process block, then prints everything the panel wo
 | Probe line | Linux | macOS |
 | --- | --- | --- |
 | memory | `free -g`, or the `/proc/meminfo` sum in CLAUDE.md | `vm_stat` |
-| storage rows | `df -B1` | `df` |
+| storage rows | `df -B1` | `df` for available space; `diskutil apfs list` for internal container usage |
 | io lifetime | `/sys/block/<dev>/stat`, sectors times 512 | `iostat -I -d disk0`, read and written combined, in MB |
 | network | `/proc/net/netstat` IpExt octets | `netstat -ib` |
 | temperatures | `sensors`, `nvidia-smi` | none published |
@@ -143,6 +145,8 @@ The default. Memory comes from `/proc/meminfo` into the panel's buckets as CLAUD
 
 `platform: .macOS`. Memory comes from the Darwin exporter's Mach buckets, read as the local panel reads `host_statistics64`; network sums every interface but loopback; the header shows the product version from `node_os_info`; units are LaunchAgents. Processes come from the same `top` the local panel runs, which is setuid and sees everything. The Darwin exporter has no working thermal collector on the minis, so the ribbon says no sensors are published. APFS reports one container's capacity for every volume in it, so declare `/System/Volumes/Data` alone as the disk; every other volume in the container would repeat its figures.
 
+The remote internal disk's used figure is container capacity minus available space, including other volumes and snapshots. Compare it with `diskutil apfs list`, rather than `df`'s per-volume Used column. On the M6, 61% used was the container's 148.8 GB while `df` showed 53% for Data alone. Its readiness collector publishes age/success without the M1 minis' LaunchAgent/container series, so the panel leaves service counts absent.
+
 The homelab repo's mini README says the Darwin exporter exposes no host memory, but node_exporter 1.12.1 on both minis publishes `node_memory_*`, which is what the panel reads. Check for those series in the raw scrape: an exporter without them draws an empty memory pane.
 
 ### A new operating system
@@ -181,6 +185,8 @@ The core grid wraps onto two rows by itself when its bars would narrow below 7 p
 ### Sensors
 
 hwmon chips map to sensor clusters by driver name in `RemoteMapper.cluster(forChip:)`: `k10temp`, `coretemp` and `zenpower` to CPU, `nvme` and `drivetemp` to SSD, `amdgpu` to GPU. A new driver needs a line there, checked against `sensors`. Leave `acpitz` out: ACPI zones on desktop boards are often unconnected, and ai-1's reads a constant 16.8 °C.
+
+On M6, `ioreg -p IODeviceTree -n cpus -r -l` identifies cpu0–5 as `E`, cpu6–7 as `P`, and cpu8–11 as `M`. Together with `sysctl hw.perflevel0.name hw.perflevel0.physicalcpu hw.perflevel1.name hw.perflevel1.physicalcpu hw.perflevel2.name hw.perflevel2.physicalcpu`, that maps to Efficiency 6, Super 2, Performance 4. `powermetrics --samplers cpu_power -n 1` independently confirms CPU0–5 in E and CPU6–11 in the combined PS cluster. Do not copy the sysctl tier order into the index-based grid.
 
 ### Storage
 

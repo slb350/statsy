@@ -41,7 +41,7 @@ final class SSHTunnel {
             "-o", "ExitOnForwardFailure=yes",
             "-L", "127.0.0.1:\(target.localPort):\(target.exporterHost):\(target.exporterPort)",
             target.sshDestination,
-            "exec cat > /dev/null",
+            "exec cat > /dev/null"
         ]
         let lifeline = Pipe()
         process.standardInput = lifeline

@@ -126,7 +126,7 @@ extension RemoteMapper {
             guard let size = reading("node_filesystem_size_bytes", collector("storage_size_bytes")),
                   size > 0,
                   let spare = reading(
-                      "node_filesystem_avail_bytes", collector("storage_available_bytes")
+                    "node_filesystem_avail_bytes", collector("storage_available_bytes")
                   )
             else { continue }
 

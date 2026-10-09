@@ -30,7 +30,7 @@ extension RemoteMapper {
 
     private static let darwinNames: Set<String> = [
         "node_os_info",
-        "node_network_receive_bytes_total", "node_network_transmit_bytes_total",
+        "node_network_receive_bytes_total", "node_network_transmit_bytes_total"
     ]
 
     /// The header's version: the kernel release on Linux, where it is what

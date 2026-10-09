@@ -33,7 +33,8 @@ struct PrometheusTextTests {
     /// carries a space. Splitting the label block on whitespace loses it.
     @Test("keeps a label value containing a space")
     func spaceInLabelValue() {
-        let line = #"homelab_mount_present{fstype="nfs",mountpoint="/mnt/nas-storage",source="dondenas.local:/volume3/Donde Nas"} 1"#
+        let line = #"homelab_mount_present{fstype="nfs",mountpoint="/mnt/nas-storage","#
+            + #"source="dondenas.local:/volume3/Donde Nas"} 1"#
         let sample = PrometheusText.parse(line)[0]
         #expect(sample.labels["source"] == "dondenas.local:/volume3/Donde Nas")
         #expect(sample.labels["mountpoint"] == "/mnt/nas-storage")

@@ -27,7 +27,7 @@ private enum Fixture {
         "%Cpu(s):  0.0 us,  0.0 sy,  0.0 ni,100.0 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st ",
         "MiB Mem : 127939.7 total,  14084.4 free, 100128.6 used,  17738.2 buff/cache     ",
         "MiB Swap:   8192.0 total,   8192.0 free,      0.0 used.  27811.1 avail Mem ",
-        "",
+        ""
     ]
 }
 

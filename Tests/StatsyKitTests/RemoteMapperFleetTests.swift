@@ -42,7 +42,8 @@ struct FleetFixture: Sendable {
     )
     static let macMini2 = FleetFixture(name: "mac-mini-2", target: TargetRegistry.macMini2.remote!)
     static let macMini3 = FleetFixture(name: "mac-mini-3", target: TargetRegistry.macMini3.remote!)
-    static let all = [homelab1, legion, macMini2, macMini3]
+    static let macMiniM6 = FleetFixture(name: "mac-mini-m6", target: TargetRegistry.macMiniM6.remote!)
+    static let all = [homelab1, legion, macMini2, macMini3, macMiniM6]
 }
 
 @Suite("Remote mapper — the rest of the fleet")
@@ -215,11 +216,11 @@ struct RemoteMapperFleetTests {
     @Test("a mini's network totals leave out loopback")
     func miniNetwork() throws {
         let metrics = FleetFixture.macMini3.metrics
-        let lo = try #require(metrics.value("node_network_receive_bytes_total", ["device": "lo0"]))
+        let loopback = try #require(metrics.value("node_network_receive_bytes_total", ["device": "lo0"]))
         let all = metrics.samples("node_network_receive_bytes_total")
             .reduce(0) { $0 + RemoteMapper.bytes($1.value) }
-        #expect(FleetFixture.macMini3.snapshot().network.lifetimeIn == all - RemoteMapper.bytes(lo))
-        #expect(lo > 0)
+        #expect(FleetFixture.macMini3.snapshot().network.lifetimeIn == all - RemoteMapper.bytes(loopback))
+        #expect(loopback > 0)
     }
 
     @Test("a mini reads all eight cores in two clusters")
@@ -250,5 +251,44 @@ struct RemoteMapperFleetTests {
     @Test("a mini has no sensors to show")
     func miniThermal() {
         #expect(FleetFixture.macMini2.snapshot().thermal.clusters.isEmpty)
+    }
+
+    // MARK: - mac-mini-m6
+
+    @Test("M6 maps all 12 cores and its macOS product version")
+    func m6Machine() {
+        let snapshot = FleetFixture.macMiniM6.snapshot()
+        #expect(snapshot.cpu.cores.map(\.id) == Array(0..<12))
+        #expect(snapshot.machine.clusters.map(\.coreCount) == [6, 2, 4])
+        #expect(snapshot.machine.platformVersion == "macOS 27.0")
+        #expect(snapshot.memory.total == 16 << 30)
+        #expect(snapshot.memory.inUse == 13_378_945_024)
+        #expect(snapshot.memory.gpuShared == 0)
+        #expect(snapshot.gpus.isEmpty)
+    }
+
+    @Test("M6 counts only its internal disk in capacity and throughput")
+    func m6Storage() throws {
+        let fixture = FleetFixture.macMiniM6
+        let storage = fixture.snapshot().storage
+        #expect(storage.volumes.map(\.name) == ["Data", "Models", "Backups"])
+        let data = try #require(storage.volumes.first)
+        #expect(data.total == 245_054_767_104)
+        #expect(storage.total == data.total)
+        #expect(storage.free == data.total - data.used)
+        #expect(storage.volumes.dropFirst().allSatisfy { $0.role == .network })
+        let disk0 = try #require(fixture.metrics.value("node_disk_read_bytes_total", ["device": "disk0"]))
+        #expect(storage.lifetimeRead == RemoteMapper.bytes(disk0))
+        // The simulator's disk image publishes disk4; it must not be counted.
+        #expect(fixture.metrics.value("node_disk_read_bytes_total", ["device": "disk4"]) != nil)
+    }
+
+    @Test("M6 reads readiness collector age without inventing service counts")
+    func m6Collector() throws {
+        let services = FleetFixture.macMiniM6.snapshot().services
+        #expect(try #require(services.collectionAge) == 7)
+        #expect(services.totalUnits == 0)
+        #expect(services.totalContainers == 0)
+        #expect(services.endpoints.isEmpty)
     }
 }

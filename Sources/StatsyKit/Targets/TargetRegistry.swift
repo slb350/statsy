@@ -9,28 +9,28 @@ public enum TargetRegistry {
     public static let local = Target(id: "local", name: "This Mac", source: .local)
 
     public static let homelabAI1 = linux(
-        id: "homelab-ai-1", address: "192.168.68.88", localPort: 19100,
+        id: "homelab-ai-1",
         // UFW admits 9100 from the operations host only, and the listener is
         // bound to the LAN address rather than loopback, so the tunnel lands
         // on the host's own address from inside.
-        exporterHost: "192.168.68.88",
+        endpoint: ExporterEndpoint(address: "192.168.68.88", localPort: 19100, exporterHost: "192.168.68.88"),
         model: "Threadripper 3960X 24C/48T", gpuDescription: "3 × RTX 3080 20 GB",
         volumes: [
             RemoteVolume(mountPoint: "/", name: "Root", role: .system),
             RemoteVolume(mountPoint: "/srv", name: "Srv", role: .data),
-            RemoteVolume(mountPoint: "/mnt/nas-storage", name: "NAS", role: .network),
+            RemoteVolume(mountPoint: "/mnt/nas-storage", name: "NAS", role: .network)
         ],
         diskDevices: ["nvme0n1"]
     )
 
     public static let strix = linux(
-        id: "strix", address: "192.168.68.63", localPort: 19163,
+        id: "strix",
         // Same shape as ai-1: the exporter binds its LAN address and UFW keeps
         // it narrow, so the tunnel lands on it from inside.
-        exporterHost: "192.168.68.63",
+        endpoint: ExporterEndpoint(address: "192.168.68.63", localPort: 19163, exporterHost: "192.168.68.63"),
         model: "Ryzen AI Max 395 16C/32T", gpuDescription: "Radeon 8060S 128 GB (unified)",
         volumes: [
-            RemoteVolume(mountPoint: "/", name: "Root", role: .system),
+            RemoteVolume(mountPoint: "/", name: "Root", role: .system)
             // /mnt/coldstore (NFS from BabyNas) is deliberately absent: the
             // fleet's contract checks its presence but never stats it — a
             // stalled hard mount would wedge the collector — and node_exporter
@@ -42,9 +42,9 @@ public enum TargetRegistry {
     )
 
     public static let homelab1 = linux(
-        id: "homelab-1", address: "192.168.68.73", localPort: 19173,
+        id: "homelab-1",
         // The compose file binds the exporter to the LAN address.
-        exporterHost: "192.168.68.73",
+        endpoint: ExporterEndpoint(address: "192.168.68.73", localPort: 19173, exporterHost: "192.168.68.73"),
         model: "Core i5-12600K 10C/16T", gpuDescription: "RTX 3070 Ti 8 GB",
         volumes: [
             RemoteVolume(mountPoint: "/", name: "Root", role: .system),
@@ -54,29 +54,36 @@ public enum TargetRegistry {
             RemoteVolume(mountPoint: "/mnt/nas-storage", name: "NAS", role: .network),
             // Unlike strix, node_exporter here does stat the coldstore mount
             // and publishes its capacity, so the row has a source.
-            RemoteVolume(mountPoint: "/mnt/coldstore", name: "Cold", role: .network),
+            RemoteVolume(mountPoint: "/mnt/coldstore", name: "Cold", role: .network)
         ],
         // / sits on LVM over the first NVMe and /srv on the second.
         diskDevices: ["nvme0n1", "nvme1n1"]
     )
 
     public static let homelabLegion = linux(
-        id: "homelab-legion", address: "192.168.68.72", localPort: 19172,
+        id: "homelab-legion",
         // This exporter listens on every address, so loopback reaches it.
-        exporterHost: "127.0.0.1",
+        endpoint: ExporterEndpoint(address: "192.168.68.72", localPort: 19172, exporterHost: "127.0.0.1"),
         model: "Ryzen Z1 Extreme 8C/16T", gpuDescription: "Radeon 780M",
         volumes: [
             RemoteVolume(mountPoint: "/", name: "Root", role: .system),
             RemoteVolume(mountPoint: "/srv", name: "Srv", role: .data),
-            RemoteVolume(mountPoint: "/mnt/nas-storage", name: "NAS", role: .network),
+            RemoteVolume(mountPoint: "/mnt/nas-storage", name: "NAS", role: .network)
         ],
         diskDevices: ["nvme0n1"]
     )
 
+    /// The SSH address and both ends of its exporter forward travel together.
+    private struct ExporterEndpoint {
+        let address: String
+        let localPort: Int
+        let exporterHost: String
+    }
+
     /// A Linux host reached as `steve`, named the same in the menu, the header
     /// and its collector's `asset_host` label.
     private static func linux(
-        id: String, address: String, localPort: Int, exporterHost: String,
+        id: String, endpoint: ExporterEndpoint,
         model: String, gpuDescription: String? = nil, volumes: [RemoteVolume],
         diskDevices: [String], unifiedMemory: Bool = false
     ) -> Target {
@@ -85,8 +92,8 @@ public enum TargetRegistry {
             name: id,
             source: .remote(
                 RemoteTarget(
-                    sshUser: "steve", sshHost: address,
-                    exporterHost: exporterHost, localPort: localPort,
+                    sshUser: "steve", sshHost: endpoint.address,
+                    exporterHost: endpoint.exporterHost, localPort: endpoint.localPort,
                     hostName: id, model: model, gpuDescription: gpuDescription,
                     volumes: volumes, diskDevices: diskDevices,
                     unifiedMemory: unifiedMemory
@@ -104,7 +111,7 @@ public enum TargetRegistry {
             RemoteVolume(
                 mountPoint: "/Users/stephenbrandon/NAS/novels-backups", name: "Backups",
                 role: .network
-            ),
+            )
         ]
     )
 
@@ -114,8 +121,39 @@ public enum TargetRegistry {
             RemoteVolume(
                 mountPoint: "/Users/stephenbrandon/NAS/novels-backups", name: "Backups",
                 role: .network
-            ),
+            )
         ]
+    )
+
+    public static let macMiniM6 = Target(
+        id: "mac-mini-m6", name: "mac-mini-m6",
+        source: .remote(
+            RemoteTarget(
+                sshUser: "stephenbrandon", sshHost: "192.168.70.165",
+                // Root launchd owns the loopback-only exporter.
+                exporterHost: "127.0.0.1", localPort: 19265,
+                platform: .macOS, hostName: "mac-mini-m6",
+                model: "Apple M6", gpuDescription: "12-core GPU",
+                // IODeviceTree: cpu0–5 E, cpu6–7 P (Super), cpu8–11 M
+                // (Performance). hw.perflevel reports the opposite tier order.
+                clusters: [
+                    CPUCluster(name: "Efficiency", coreCount: 6),
+                    CPUCluster(name: "Super", coreCount: 2),
+                    CPUCluster(name: "Performance", coreCount: 4)
+                ],
+                volumes: [
+                    RemoteVolume(mountPoint: "/System/Volumes/Data", name: "Data", role: .data),
+                    RemoteVolume(
+                        mountPoint: "/Users/stephenbrandon/NAS/models", name: "Models", role: .network
+                    ),
+                    RemoteVolume(
+                        mountPoint: "/Users/stephenbrandon/NAS/novels-backups", name: "Backups",
+                        role: .network
+                    )
+                ],
+                diskDevices: ["disk0"]
+            )
+        )
     )
 
     /// The two M1 minis differ only in address and NAS mounts.
@@ -142,7 +180,7 @@ public enum TargetRegistry {
                     // M1 numbers its efficiency cores first.
                     clusters: [
                         CPUCluster(name: "Efficiency", coreCount: 4),
-                        CPUCluster(name: "Performance", coreCount: 4),
+                        CPUCluster(name: "Performance", coreCount: 4)
                     ],
                     volumes: [
                         RemoteVolume(mountPoint: "/System/Volumes/Data", name: "Data", role: .data)
@@ -154,7 +192,7 @@ public enum TargetRegistry {
     }
 
     public static let all: [Target] = [
-        local, homelabAI1, strix, homelab1, homelabLegion, macMini2, macMini3,
+        local, homelabAI1, strix, homelab1, homelabLegion, macMini2, macMini3, macMiniM6
     ]
 
     public static func target(id: String) -> Target? {

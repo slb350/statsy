@@ -203,7 +203,7 @@ public struct RemoteMapper: Sendable {
         "node_disk_read_bytes_total", "node_disk_written_bytes_total",
         "node_netstat_IpExt_InOctets", "node_netstat_IpExt_OutOctets",
         "node_filesystem_size_bytes", "node_filesystem_avail_bytes",
-        "node_filesystem_free_bytes",
+        "node_filesystem_free_bytes"
     ]
 
     public func wants(_ name: String) -> Bool {

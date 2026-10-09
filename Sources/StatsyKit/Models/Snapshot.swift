@@ -67,7 +67,7 @@ public struct MachineInfo: Sendable, Equatable {
         parts.append(model.uppercased())
         if !clusters.isEmpty {
             parts.append(clusters.map { "\($0.coreCount)\($0.name.prefix(1).uppercased())" }
-                .joined(separator: " + "))
+                            .joined(separator: " + "))
         }
         if let gpuDescription { parts.append(gpuDescription.uppercased()) }
         parts.append("\(Format.gibibytes(memoryBytes)) GB")
