@@ -9,7 +9,7 @@ let package = Package(
         .target(name: "StatsyControl", dependencies: ["StatsyKit"]),
         .target(name: "StatsyWindowing"),
         .executableTarget(name: "Statsy", dependencies: ["StatsyKit", "StatsyWindowing"]),
-        .executableTarget(name: "StatsyMenu", dependencies: ["StatsyControl"]),
+        .executableTarget(name: "StatsyMenu", dependencies: ["StatsyControl", "StatsyKit"]),
         .executableTarget(name: "statsy-probe", dependencies: ["StatsyKit"]),
         .testTarget(
             name: "StatsyKitTests",

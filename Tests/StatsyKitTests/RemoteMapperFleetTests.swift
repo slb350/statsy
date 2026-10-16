@@ -105,9 +105,10 @@ struct RemoteMapperFleetTests {
         let gpu = try #require(gpus.first)
         #expect(gpus.count == 1)
         #expect(gpu.memoryLabel == "VRAM")
-        #expect(gpu.memoryTotal == 8 << 30)
-        #expect(gpu.wattLimit == 290)
-        #expect(gpu.powerDescription == "\(Format.decimal(gpu.watts, decimals: 0)) / 290 W")
+        // The driver's usable VRAM excludes a small reserved part of the 32 GB card.
+        #expect(gpu.memoryTotal == 34_208_743_424)
+        #expect(gpu.wattLimit == 300)
+        #expect(gpu.powerDescription == "\(Format.decimal(gpu.watts, decimals: 0)) / 300 W")
         // A discrete card's VRAM is not system memory.
         #expect(FleetFixture.homelab1.snapshot().memory.gpuShared == 0)
     }
@@ -122,28 +123,30 @@ struct RemoteMapperFleetTests {
         #expect(expected > 0)
     }
 
-    @Test("homelab-1 shows its NAS and coldstore mounts but leaves them out of the headline")
+    @Test("homelab-1 shows the local volumes its native exporter publishes")
     func homelab1Volumes() throws {
         let storage = FleetFixture.homelab1.snapshot().storage
-        #expect(storage.volumes.map(\.name) == ["Root", "Srv", "NAS", "Cold"])
+        #expect(storage.volumes.map(\.name) == ["Root", "Srv"])
         let local = storage.volumes.filter { $0.role != .network }
         #expect(storage.total == local.reduce(0) { $0 + $1.total })
-        #expect(try #require(storage.volumes.last).total > 10 << 40)
+        #expect(try #require(storage.volumes.last).total > 1 << 40)
     }
 
-    @Test("homelab-1 counts its units and containers")
+    @Test("homelab-1 counts native utilities with former container services retired")
     func homelab1Services() {
         let services = FleetFixture.homelab1.snapshot().services
         let metrics = FleetFixture.homelab1.metrics
         #expect(services.totalUnits == metrics.samples("homelab_service_active").count)
         #expect(services.totalContainers == metrics.samples("homelab_container_running").count)
-        #expect(services.totalContainers > 20)
+        #expect(services.totalUnits == 6)
+        #expect(services.totalContainers == 0)
         #expect(services.endpoints.isEmpty)
     }
 
     @Test("homelab-1 reads all 16 threads")
     func homelab1Cores() {
         #expect(FleetFixture.homelab1.snapshot().cpu.cores.count == 16)
+        #expect(FleetFixture.homelab1.snapshot().machine.platformVersion == "Linux 7.0.0-38-generic")
     }
 
     // MARK: - homelab-legion

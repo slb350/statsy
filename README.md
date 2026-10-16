@@ -54,7 +54,7 @@ The menu bar item picks which machine the panel shows. The default is this Mac; 
 | --- | --- |
 | `homelab-ai-1` | Threadripper 3960X with three RTX 3080 20 GB cards, serving a 27B model |
 | `strix` | Strix Halo serving a model out of 128 GB of unified memory |
-| `homelab-1` | Core i5-12600K with an RTX 3070 Ti, running the production services |
+| `homelab-1` | Core i5-12600K on MSI Z790 with a Radeon AI PRO R9700 32 GB, running Ubuntu 26.04.1 |
 | `homelab-legion` | Legion Go (Ryzen Z1 Extreme), the operations control plane |
 | `mac-mini-2`, `mac-mini-3` | M1 Mac minis |
 | `mac-mini-m6` | M6 Mac mini, 6 Efficiency + 2 Super + 4 Performance cores |
@@ -67,7 +67,7 @@ Switching takes effect on a running panel without restarting it. [docs/adding-a-
 
 Readings come from that host's node_exporter, scraped through an `ssh -L` forward. The host admits port 9100 from its operations server alone, and the forward means that does not have to change: no new listener, no firewall rule and no credential inside the app. The key is ssh's business.
 
-Two cadences land on the same screen. Everything node_exporter reads is current as of the scrape; GPU, NVMe, unit and endpoint figures come from a collector on a one-minute timer, and the ribbon shows that age rather than implying otherwise. If the host goes away the panel says so and ages the last reading rather than holding a stale number that still looks live.
+Two cadences land on the same screen. Everything node_exporter reads is current as of the scrape; GPU, NVMe, unit and endpoint figures come from a collector on a one-minute timer, and the ribbon shows that age rather than implying otherwise. On homelab-1, Radeon readings come from the cabinet sampler's existing brief wake cycle so monitoring preserves GPU idle suspend; the ribbon includes that source sample's age. If the host goes away the panel says so and ages the last reading rather than holding a stale number that still looks live.
 
 ## Where the numbers come from
 

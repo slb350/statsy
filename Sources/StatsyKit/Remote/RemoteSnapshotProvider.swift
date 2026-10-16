@@ -161,7 +161,7 @@ public actor RemoteSnapshotProvider: SnapshotProvider {
             .map { now.timeIntervalSince($0) >= Self.capacityInterval } ?? true
         // Concurrent, so a slow NFS stat in the capacity scrape cannot hold
         // the live one past the refresh interval.
-        async let live = scrape(target.scrapeURL(collectors: platform.liveCollectors))
+        async let live = scrape(target.scrapeURL(collectors: target.liveCollectors))
         async let filesystems = capacityDue
             ? scrape(target.scrapeURL(collectors: platform.capacityCollectors)) : nil
         guard let text = await live else { return nil }

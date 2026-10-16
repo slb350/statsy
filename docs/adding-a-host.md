@@ -23,7 +23,9 @@ The collectors each platform asks for are `RemotePlatform.liveCollectors` plus `
 | Linux | `cpu`, `loadavg`, `stat`, `uname`, `hwmon`, `diskstats`, `netstat`, `meminfo`, `textfile`, `filesystem` |
 | macOS | `cpu`, `loadavg`, `boottime`, `uname`, `os`, `diskstats`, `netdev`, `meminfo`, `textfile`, `filesystem` |
 
-An exporter with one of these disabled answers the whole scrape with 400, which the panel shows as a failed link. Collectors left out of the list can stay disabled; the minis run without `thermal`.
+An exporter with one of these disabled answers the whole scrape with 400, which the panel shows as a failed link. Declare intentionally disabled live collectors in `RemoteTarget.disabledCollectors`; the provider uses the target’s filtered list. Collectors left out of the list can stay disabled; the minis run without `thermal`.
+
+The rebuilt `homelab-1` disables `hwmon` so the fan controller remains the Radeon’s single wake/read/suspend owner. Its native exporter stays at `192.168.68.73:9100`. CPU and GPU temperatures, Radeon utilization, discrete VRAM, power and cap arrive through the cabinet status textfile. Statsy shows the oldest contributing sample’s age; the two minute-cadence stages can be nearly two minutes behind. The R9700 keeps `unifiedMemory` false. Only Root and Srv have capacity rows: the native exporter excludes NFS, while the collector checks NAS mount presence without reporting capacity. The host contract lives in `~/dev/homelab/hosts/homelab-1/monitoring/README.md`.
 
 ## 1. Gather the facts
 

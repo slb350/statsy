@@ -30,7 +30,7 @@ extension RemoteMapper {
     /// reading with an opaque chip path, and only `node_hwmon_chip_names` says
     /// what that chip is. Sensors on chips with no cluster — the wireless card,
     /// for one — are dropped rather than averaged into something unrelated.
-    mutating func thermal(from metrics: MetricSet) -> ThermalMetrics {
+    mutating func thermal(from metrics: MetricSet) -> (metrics: ThermalMetrics, usesCabinet: Bool) {
         // hwmon paths and their drivers do not change without a reboot, so the
         // chip-to-cluster map is resolved once instead of re-joining two
         // metrics and re-running the driver switch on every scrape.
@@ -49,9 +49,26 @@ extension RemoteMapper {
             grouped[.gpu] = gpuTemperatures
         }
 
+        // A runtime-suspended Radeon has one sampler: the cabinet controller.
+        // Its cached temperatures fill only clusters without direct readings.
+        var usesCabinet = false
+        for sample in metrics.samples(collector("cabinet_temperature_celsius")) {
+            let cluster: SensorCluster?
+            switch sample.labels["sensor"] {
+            case "cpu": cluster = .cpu
+            case "gpu": cluster = .gpu
+            default: cluster = nil
+            }
+            if let cluster, grouped[cluster] == nil,
+               ThermalCalculator.plausibleRange.contains(sample.value) {
+                grouped[cluster] = [sample.value]
+                usesCabinet = true
+            }
+        }
+
         // No fan telemetry: no host here publishes an hwmon fan, and strix's
         // cabinet fan is an on/off relay rather than a speed.
-        return ThermalCalculator.metrics(grouped: grouped)
+        return (ThermalCalculator.metrics(grouped: grouped), usesCabinet)
     }
 
     /// Resolves each hwmon chip path to the cluster its readings belong to.

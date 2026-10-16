@@ -52,7 +52,7 @@ struct RemoteRibbon: View {
 
     /// One dot for the whole host, then a count per kind of thing the
     /// collector watches. Counts rather than a mark per endpoint: Legion has
-    /// two endpoints and homelab-1 twenty-four containers, and neither fits
+    /// two endpoints and another host dozens of containers, and neither fits
     /// one mark apiece.
     private var serviceReadout: some View {
         VStack(alignment: .leading, spacing: 3) {

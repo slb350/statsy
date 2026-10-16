@@ -49,17 +49,18 @@ public struct RemoteMapper: Sendable {
         let ticks = Self.ticks(from: metrics)
         let cpu = cpu(from: ticks, loadAverage: Self.loadAverage(from: metrics))
         previousTicks = ticks
+        let thermal = thermal(from: metrics)
 
         return Snapshot(
             machine: machine(from: metrics, memoryTotal: memory.total),
             cpu: cpu,
             memory: memory,
             storage: storage(from: metrics, elapsed: elapsed),
-            thermal: thermal(from: metrics),
+            thermal: thermal.metrics,
             processes: processes,
             network: network(from: metrics),
             gpus: gpus(from: metrics),
-            services: services(from: metrics, now: now),
+            services: services(from: metrics, now: now, usesCabinetTemperatures: thermal.usesCabinet),
             uptime: Self.uptime(from: metrics, now: now),
             link: link
         )
@@ -160,7 +161,7 @@ public struct RemoteMapper: Sendable {
     /// A Mac has LaunchAgents where Linux has systemd units, and the collector
     /// names them differently; loaded is the Mac's healthy state, since a
     /// periodic agent is not running between its runs.
-    func services(from metrics: MetricSet, now: Date) -> ServiceHealth {
+    func services(from metrics: MetricSet, now: Date, usesCabinetTemperatures: Bool) -> ServiceHealth {
         let units = metrics.samples(collector("service_active"))
             + metrics.samples(collector("launchagent_loaded"))
         let containers = metrics.samples(collector("container_running"))
@@ -171,10 +172,16 @@ public struct RemoteMapper: Sendable {
             }
             .sorted { $0.name < $1.name }
 
-        var age: TimeInterval?
-        if let stamp = metrics.value(collector("collection_timestamp_seconds")) {
-            age = max(0, now.timeIntervalSince1970 - stamp)
+        // The fleet textfile may contain a sample from the fan's earlier cycle.
+        // Show the oldest contributing sample's age, not just the re-export time.
+        var timestampNames = ["collection_timestamp_seconds", "gpu_sample_timestamp_seconds"]
+        if usesCabinetTemperatures {
+            timestampNames.append("cabinet_status_timestamp_seconds")
         }
+        let timestamps = timestampNames
+            .flatMap { metrics.samples(collector($0)).map(\.value) }
+            .filter { $0.isFinite && $0 > 0 }
+        let age = timestamps.min().map { max(0, now.timeIntervalSince1970 - $0) }
 
         return ServiceHealth(
             activeUnits: units.filter { $0.value != 0 }.count,

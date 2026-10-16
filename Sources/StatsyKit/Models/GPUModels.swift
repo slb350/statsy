@@ -1,7 +1,7 @@
 import Foundation
 
-/// One discrete GPU, as the fleet collector reports it: nvidia-smi on a discrete
-/// host, the amdgpu sysfs contract on a unified one.
+/// One GPU, as the fleet collector reports it: nvidia-smi, a cached discrete
+/// amdgpu sample, or the unified-memory amdgpu sysfs contract.
 ///
 /// Apple silicon has no equivalent reading: its GPU shares system memory and
 /// publishes neither a VRAM figure nor a board power draw, so a local snapshot

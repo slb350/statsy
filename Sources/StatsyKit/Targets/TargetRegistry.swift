@@ -43,21 +43,21 @@ public enum TargetRegistry {
 
     public static let homelab1 = linux(
         id: "homelab-1",
-        // The compose file binds the exporter to the LAN address.
+        // The native exporter retains the LAN binding after the OS rebuild.
         endpoint: ExporterEndpoint(address: "192.168.68.73", localPort: 19173, exporterHost: "192.168.68.73"),
-        model: "Core i5-12600K 10C/16T", gpuDescription: "RTX 3070 Ti 8 GB",
+        model: "Core i5-12600K 10C/16T", gpuDescription: "Radeon AI PRO R9700 32 GB",
         volumes: [
             RemoteVolume(mountPoint: "/", name: "Root", role: .system),
-            RemoteVolume(mountPoint: "/srv", name: "Srv", role: .data),
-            // /mnt/nas-media is the same DondeNas export mounted a second
-            // time, so it would only repeat this row.
-            RemoteVolume(mountPoint: "/mnt/nas-storage", name: "NAS", role: .network),
-            // Unlike strix, node_exporter here does stat the coldstore mount
-            // and publishes its capacity, so the row has a source.
-            RemoteVolume(mountPoint: "/mnt/coldstore", name: "Cold", role: .network)
+            RemoteVolume(mountPoint: "/srv", name: "Srv", role: .data)
+            // The native exporter's default filter excludes NFS capacity.
+            // NAS mounts remain present but have no capacity series to draw.
         ],
-        // / sits on LVM over the first NVMe and /srv on the second.
-        diskDevices: ["nvme0n1", "nvme1n1"]
+        // NVMe enumeration changed with the motherboard: /srv is nvme0n1,
+        // root's LVM is on nvme1n1. Both physical devices still count once.
+        diskDevices: ["nvme0n1", "nvme1n1"],
+        // The fan controller owns the Radeon wake/read/suspend cycle and
+        // publishes cached telemetry. A second hwmon reader defeats suspend.
+        disabledCollectors: ["hwmon"]
     )
 
     public static let homelabLegion = linux(
@@ -85,7 +85,8 @@ public enum TargetRegistry {
     private static func linux(
         id: String, endpoint: ExporterEndpoint,
         model: String, gpuDescription: String? = nil, volumes: [RemoteVolume],
-        diskDevices: [String], unifiedMemory: Bool = false
+        diskDevices: [String], unifiedMemory: Bool = false,
+        disabledCollectors: Set<String> = []
     ) -> Target {
         Target(
             id: id,
@@ -96,7 +97,7 @@ public enum TargetRegistry {
                     exporterHost: endpoint.exporterHost, localPort: endpoint.localPort,
                     hostName: id, model: model, gpuDescription: gpuDescription,
                     volumes: volumes, diskDevices: diskDevices,
-                    unifiedMemory: unifiedMemory
+                    unifiedMemory: unifiedMemory, disabledCollectors: disabledCollectors
                 )
             )
         )

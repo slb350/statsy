@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-10-16 — rebuilt homelab-1 and Radeon telemetry
+
+homelab-1 now identifies its MSI Z790 / Ubuntu 26.04.1 rebuild and discrete Radeon AI PRO R9700 32 GB. The native exporter disables `hwmon` to preserve GPU runtime suspend; requesting that disabled collector caused the entire live scrape to fail with HTTP 400. Targets can now exclude disabled collectors, and cabinet CPU/GPU temperatures fill gaps when direct readings are absent. The ribbon reports the oldest contributing source timestamp, including the cached GPU sample.
+
+The homelab fan controller samples utilization, usable VRAM, power and cap during its existing brief GPU wake cycle; the fleet collector exports that cache without waking the card again. homelab-1 retains four columns with discrete VRAM separate from system RAM. Root and Srv are the two published capacity rows; NAS mounts are presence-only under the rebuilt host's collector contract. Both NVMe devices still contribute throughput.
+
+The refreshed live fixture pins the R9700's 34,208,743,424 usable VRAM bytes and 300 W cap, the new kernel, and six native utility services with no containers. Six new tests cover collector selection, registry facts, fallback temperatures, precedence and source age. All 203 tests pass, and repository-wide strict SwiftLint reports zero violations. Live and fixture renders fit at 1280×480; live probe readings agree with the host's memory buckets, filesystem usage and process stream. GPU runtime suspend was observed between successive cabinet samples.
+
+Installed acceptance exposed a missing direct `StatsyMenu → StatsyKit` package dependency: an incremental release build relinked the menu against the changed target layout without recompiling its caller, then crashed in `install()`. Declaring the direct dependency rebuilt the menu and resolved the startup crash. Both bundles are installed with matching executable hashes and the homelab-1 selection preserved. The installed panel showed the independent inference workload at 16.5 GiB VRAM, 98% GPU utilization and 299/300 W; the corrected menu remains running. Its status-item UI could not be exercised by the Computer Use bridge, which timed out. During 127 seconds of installed-panel polling, exporter CPU time rose 0.656 s (0.52% of one core, including other fleet polling), and the cabinet controller rose 0.039 s (0.03%).
+
 ## 2026-10-08 — M6 Mac mini
 
 `mac-mini-m6` joins the Target menu, probe and renderer, using `stephenbrandon@192.168.70.165` and the existing loopback-only exporter. Its 12 cores are grouped in verified CPU index order: 6 Efficiency, 2 Super, 4 Performance. The internal APFS container and Models/Backups NAS mounts follow the existing Darwin mapping; NAS capacity stays outside the headline. The readiness textfile supplies collector age without inventing service or GPU readings. No host services were changed.

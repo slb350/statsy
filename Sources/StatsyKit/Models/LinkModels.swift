@@ -46,7 +46,7 @@ public struct ServiceHealth: Sendable, Equatable {
     public let runningContainers: Int
     public let totalContainers: Int
     public let endpoints: [EndpointReadiness]
-    /// Age of the collector's own run, from its published timestamp.
+    /// Age of the oldest contributing collector or cached hardware sample.
     public let collectionAge: TimeInterval?
 
     public init(

@@ -6,6 +6,28 @@ import Testing
 struct TargetRegistryTests {
     private var remotes: [RemoteTarget] { TargetRegistry.all.compactMap(\.remote) }
 
+    @Test("homelab-1 describes the rebuilt host's discrete Radeon")
+    func homelab1Hardware() throws {
+        let remote = try #require(TargetRegistry.homelab1.remote)
+        #expect(remote.gpuDescription == "Radeon AI PRO R9700 32 GB")
+        #expect(!remote.unifiedMemory)
+        #expect(remote.diskDevices == ["nvme0n1", "nvme1n1"])
+    }
+
+    @Test("homelab-1 excludes disabled hwmon without changing other hosts")
+    func homelab1Collectors() throws {
+        let remote = try #require(TargetRegistry.homelab1.remote)
+        let expected = RemotePlatform.linux.liveCollectors.filter { $0 != "hwmon" }
+        #expect(remote.liveCollectors == expected)
+        #expect(remote.replacing().liveCollectors == expected)
+        let url = try #require(remote.scrapeURL(collectors: remote.liveCollectors))
+        let query = try #require(URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems)
+        #expect(query.map(\.value) == expected)
+        for other in remotes where other.hostName != "homelab-1" {
+            #expect(other.liveCollectors == other.platform.liveCollectors)
+        }
+    }
+
     @Test("M6 uses its own address and three tiers in CPU index order")
     func m6Configuration() throws {
         let target = try #require(TargetRegistry.target(id: "mac-mini-m6"))

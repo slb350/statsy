@@ -135,6 +135,14 @@ public struct RemoteTarget: Sendable, Equatable {
     /// carried into `MachineInfo.ranksProcesses`, which is all the views ask.
     public let ranksProcesses: Bool
 
+    /// Collectors deliberately disabled on this host. Requesting even one
+    /// disabled collector makes node_exporter reject the entire scrape.
+    public let disabledCollectors: Set<String>
+
+    var liveCollectors: [String] {
+        platform.liveCollectors.filter { !disabledCollectors.contains($0) }
+    }
+
     public init(
         sshUser: String, sshHost: String,
         exporterHost: String, exporterPort: Int = 9100, localPort: Int,
@@ -143,7 +151,7 @@ public struct RemoteTarget: Sendable, Equatable {
         clusters: [CPUCluster] = [],
         volumes: [RemoteVolume], diskDevices: [String],
         collectorPrefix: String = "homelab_", unifiedMemory: Bool = false,
-        ranksProcesses: Bool = true
+        ranksProcesses: Bool = true, disabledCollectors: Set<String> = []
     ) {
         self.sshUser = sshUser
         self.sshHost = sshHost
@@ -160,6 +168,7 @@ public struct RemoteTarget: Sendable, Equatable {
         self.collectorPrefix = collectorPrefix
         self.unifiedMemory = unifiedMemory
         self.ranksProcesses = ranksProcesses
+        self.disabledCollectors = disabledCollectors
     }
 
     public var metricsURL: URL? {

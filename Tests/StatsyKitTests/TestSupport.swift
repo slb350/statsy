@@ -20,7 +20,7 @@ extension RemoteTarget {
             volumes: volumes, diskDevices: diskDevices,
             collectorPrefix: collectorPrefix ?? self.collectorPrefix,
             unifiedMemory: unifiedMemory ?? self.unifiedMemory,
-            ranksProcesses: ranksProcesses
+            ranksProcesses: ranksProcesses, disabledCollectors: disabledCollectors
         )
     }
 }
