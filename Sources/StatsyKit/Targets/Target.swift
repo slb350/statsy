@@ -104,7 +104,8 @@ public struct RemoteTarget: Sendable, Equatable {
     /// Header facts the exporter does not publish.
     public let model: String
     public let gpuDescription: String?
-    /// Core groups in core-index order, for the grid's dividers. Empty for
+    /// Core groups in core-index order, for the grid's dividers, one per
+    /// run, so a tier split across dies appears once per die. Empty for
     /// uniform cores; node_exporter publishes no performance levels.
     public let clusters: [CPUCluster]
 

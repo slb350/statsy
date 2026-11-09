@@ -66,7 +66,17 @@ public struct MachineInfo: Sendable, Equatable {
         if !host.isEmpty { parts.append(host.uppercased()) }
         parts.append(model.uppercased())
         if !clusters.isEmpty {
-            parts.append(clusters.map { "\($0.coreCount)\($0.name.prefix(1).uppercased())" }
+            // A multi-die chip repeats its tiers in index order; the header
+            // describes the chip, so each tier is totalled once.
+            var counts: [(name: String, cores: Int)] = []
+            for cluster in clusters {
+                if let index = counts.firstIndex(where: { $0.name == cluster.name }) {
+                    counts[index].cores += cluster.coreCount
+                } else {
+                    counts.append((cluster.name, cluster.coreCount))
+                }
+            }
+            parts.append(counts.map { "\($0.cores)\($0.name.prefix(1).uppercased())" }
                             .joined(separator: " + "))
         }
         if let gpuDescription { parts.append(gpuDescription.uppercased()) }

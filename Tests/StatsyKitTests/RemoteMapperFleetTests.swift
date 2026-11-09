@@ -43,7 +43,8 @@ struct FleetFixture: Sendable {
     static let macMini2 = FleetFixture(name: "mac-mini-2", target: TargetRegistry.macMini2.remote!)
     static let macMini3 = FleetFixture(name: "mac-mini-3", target: TargetRegistry.macMini3.remote!)
     static let macMiniM6 = FleetFixture(name: "mac-mini-m6", target: TargetRegistry.macMiniM6.remote!)
-    static let all = [homelab1, legion, macMini2, macMini3, macMiniM6]
+    static let macStudio = FleetFixture(name: "mac-studio", target: TargetRegistry.macStudio.remote!)
+    static let all = [homelab1, legion, macMini2, macMini3, macMiniM6, macStudio]
 }
 
 @Suite("Remote mapper — the rest of the fleet")
@@ -256,33 +257,59 @@ struct RemoteMapperFleetTests {
         #expect(FleetFixture.macMini2.snapshot().thermal.clusters.isEmpty)
     }
 
-    // MARK: - mac-mini-m6
+    // MARK: - mac-mini-m6 and mac-studio
 
-    @Test("M6 maps all 12 cores and its macOS product version")
-    func m6Machine() {
-        let snapshot = FleetFixture.macMiniM6.snapshot()
-        #expect(snapshot.cpu.cores.map(\.id) == Array(0..<12))
-        #expect(snapshot.machine.clusters.map(\.coreCount) == [6, 2, 4])
-        #expect(snapshot.machine.platformVersion == "macOS 27.0")
-        #expect(snapshot.memory.total == 16 << 30)
-        #expect(snapshot.memory.inUse == 13_378_945_024)
+    /// The facts that differ between the Apple silicon Macs newer than M1.
+    struct MacExpectation: Sendable, CustomTestStringConvertible {
+        let fixture: FleetFixture
+        let clusterCounts: [Int]
+        let version: String
+        let memory: UInt64
+        let inUse: UInt64
+        let volumes: [String]
+        let dataTotal: UInt64
+        var testDescription: String { fixture.target.hostName }
+
+        static let all = [
+            MacExpectation(
+                fixture: .macMiniM6, clusterCounts: [6, 2, 4], version: "macOS 27.0",
+                memory: 16 << 30, inUse: 13_378_945_024,
+                volumes: ["Data", "Models", "Backups"], dataTotal: 245_054_767_104
+            ),
+            MacExpectation(
+                fixture: .macStudio, clusterCounts: [12, 6, 12, 6], version: "macOS 27.2",
+                memory: 256 << 30, inUse: 136_794_980_352,
+                volumes: ["Data", "Models", "Mirror"], dataTotal: 994_610_155_520
+            )
+        ]
+    }
+
+    @Test("a Mac maps every core in declared cluster order, its memory and its product version",
+          arguments: MacExpectation.all)
+    func macMachine(expected: MacExpectation) {
+        let snapshot = expected.fixture.snapshot()
+        #expect(snapshot.cpu.cores.map(\.id) == Array(0..<expected.clusterCounts.reduce(0, +)))
+        #expect(snapshot.machine.clusters.map(\.coreCount) == expected.clusterCounts)
+        #expect(snapshot.machine.platformVersion == expected.version)
+        #expect(snapshot.memory.total == expected.memory)
+        #expect(snapshot.memory.inUse == expected.inUse)
         #expect(snapshot.memory.gpuShared == 0)
         #expect(snapshot.gpus.isEmpty)
     }
 
-    @Test("M6 counts only its internal disk in capacity and throughput")
-    func m6Storage() throws {
-        let fixture = FleetFixture.macMiniM6
+    @Test("a Mac counts only its internal disk in capacity and throughput", arguments: MacExpectation.all)
+    func macStorage(expected: MacExpectation) throws {
+        let fixture = expected.fixture
         let storage = fixture.snapshot().storage
-        #expect(storage.volumes.map(\.name) == ["Data", "Models", "Backups"])
+        #expect(storage.volumes.map(\.name) == expected.volumes)
         let data = try #require(storage.volumes.first)
-        #expect(data.total == 245_054_767_104)
+        #expect(data.total == expected.dataTotal)
         #expect(storage.total == data.total)
         #expect(storage.free == data.total - data.used)
-        #expect(storage.volumes.dropFirst().allSatisfy { $0.role == .network })
+        #expect(storage.volumes.dropFirst().allSatisfy { $0.role == .network && $0.total > 0 })
         let disk0 = try #require(fixture.metrics.value("node_disk_read_bytes_total", ["device": "disk0"]))
         #expect(storage.lifetimeRead == RemoteMapper.bytes(disk0))
-        // The simulator's disk image publishes disk4; it must not be counted.
+        // Simulator and cryptex disk images publish disk4 and up; they must not be counted.
         #expect(fixture.metrics.value("node_disk_read_bytes_total", ["device": "disk4"]) != nil)
     }
 
@@ -293,5 +320,14 @@ struct RemoteMapperFleetTests {
         #expect(services.totalUnits == 0)
         #expect(services.totalContainers == 0)
         #expect(services.endpoints.isEmpty)
+    }
+
+    @Test("Studio reports its three tracked launchd jobs and collector age")
+    func studioCollector() throws {
+        let services = FleetFixture.macStudio.snapshot().services
+        #expect(try #require(services.collectionAge) == 7)
+        #expect(services.totalUnits == 3)
+        #expect(services.activeUnits == 3)
+        #expect(services.totalContainers == 0)
     }
 }

@@ -40,7 +40,12 @@ public struct CoreLoad: Sendable, Equatable, Identifiable {
     }
 }
 
-/// A named group of cores, as reported by `hw.perflevelN.*`.
+/// A contiguous run of core indices belonging to one named tier.
+///
+/// Locally each `hw.perflevelN` is one run. A multi-die chip repeats its
+/// tiers, so a name can appear in several runs (the M5 Ultra's are
+/// Performance, Super, Performance, Super); the grid draws a divider at
+/// every run and the header totals runs by name.
 public struct CPUCluster: Sendable, Equatable {
     public let name: String
     public let coreCount: Int

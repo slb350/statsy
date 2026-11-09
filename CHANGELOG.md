@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-09 — Mac Studio
+
+`mac-studio` joins the Target menu, probe and renderer, reached as `stephenbrandon@192.168.69.19` through port 19119. The Studio had no exporter, so the homelab repo now deploys Homebrew's node_exporter 1.12.1 there as a root LaunchDaemon running as `nobody` on loopback, plus a one-minute readiness textfile that reports collector age and whether oMLX, Caffeine and the NAS mounter are loaded. The Darwin thermal collector returned `success 0` on the M5 Ultra and stays disabled.
+
+The M5 Ultra numbers each die's 12 Performance cores before its 6 Super cores, so the target declares four clusters in index order and the grid draws a divider at each. The header now totals clusters by name and reads `24P + 12S`; every other target's header is unchanged. All four remote Macs now go through one `mac()` registry factory, which replaces the M1 factory and the M6's hand-written target. The M6 and Studio machine and storage checks became one parameterized test.
+
+Live probe readings agreed with `vm_stat` (127.7 GiB in use), `diskutil apfs list` (421.7 GB container use), `df` for both NAS mounts, `iostat`, `netstat -ib` and `top`. Live and fixture renders fit at 1280×480. Both bundles were installed with matching executable hashes, and the selection was returned to This Mac. With the panel on the Studio for 90 seconds, `top` used 3.46% and node_exporter 0.51% of one core. A `.swiftlint.yml` now keeps strict SwiftLint out of `.build`, so a run from the repository root reports zero violations. 206 tests pass.
+
 ## 2026-10-16 — rebuilt homelab-1 and Radeon telemetry
 
 homelab-1 now identifies its MSI Z790 / Ubuntu 26.04.1 rebuild and discrete Radeon AI PRO R9700 32 GB. The native exporter disables `hwmon` to preserve GPU runtime suspend; requesting that disabled collector caused the entire live scrape to fail with HTTP 400. Targets can now exclude disabled collectors, and cabinet CPU/GPU temperatures fill gaps when direct readings are absent. The ribbon reports the oldest contributing source timestamp, including the cached GPU sample.

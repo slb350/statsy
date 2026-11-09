@@ -32,10 +32,7 @@ struct TargetRegistryTests {
     func m6Configuration() throws {
         let target = try #require(TargetRegistry.target(id: "mac-mini-m6"))
         let remote = try #require(target.remote)
-        #expect(remote.sshDestination == "stephenbrandon@192.168.70.165")
-        #expect(remote.exporterHost == "127.0.0.1")
         #expect(remote.localPort == 19265)
-        #expect(remote.platform == .macOS)
         #expect(remote.hostName == "mac-mini-m6")
         #expect(remote.model == "Apple M6")
         #expect(remote.gpuDescription == "12-core GPU")
@@ -48,6 +45,23 @@ struct TargetRegistryTests {
         #expect(remote.volumes.map(\.name) == ["Data", "Models", "Backups"])
         #expect(remote.ranksProcesses)
         // Apple GPU occupancy already lives in the Darwin memory buckets.
+        #expect(!remote.unifiedMemory)
+    }
+
+    @Test("the Studio declares both dies' tiers in CPU index order")
+    func studioConfiguration() throws {
+        let target = try #require(TargetRegistry.target(id: "mac-studio"))
+        let remote = try #require(target.remote)
+        #expect(remote.localPort == 19119)
+        #expect(remote.hostName == "mac-studio")
+        #expect(remote.model == "Apple M5 Ultra")
+        #expect(remote.gpuDescription == "80-core GPU")
+        // IODeviceTree: per die, cpu0–11 M (Performance) then cpu12–17 P (Super).
+        let die = [CPUCluster(name: "Performance", coreCount: 12), CPUCluster(name: "Super", coreCount: 6)]
+        #expect(remote.clusters == die + die)
+        #expect(remote.diskDevices == ["disk0"])
+        #expect(remote.volumes.map(\.name) == ["Data", "Models", "Mirror"])
+        #expect(remote.volumes.dropFirst().allSatisfy { $0.role == .network })
         #expect(!remote.unifiedMemory)
     }
 
@@ -69,7 +83,8 @@ struct TargetRegistryTests {
         (TargetRegistry.homelabLegion, "steve@192.168.68.72", "127.0.0.1", .linux),
         (TargetRegistry.macMini2, "stephenbrandon@192.168.68.82", "127.0.0.1", .macOS),
         (TargetRegistry.macMini3, "stephenbrandon@192.168.68.84", "127.0.0.1", .macOS),
-        (TargetRegistry.macMiniM6, "stephenbrandon@192.168.70.165", "127.0.0.1", .macOS)
+        (TargetRegistry.macMiniM6, "stephenbrandon@192.168.70.165", "127.0.0.1", .macOS),
+        (TargetRegistry.macStudio, "stephenbrandon@192.168.69.19", "127.0.0.1", .macOS)
     ])
     func exporterBinding(target: Target, destination: String, exporter: String, platform: RemotePlatform) throws {
         let remote = try #require(target.remote)

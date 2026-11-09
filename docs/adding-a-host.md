@@ -73,7 +73,9 @@ public static let homelab3 = linux(
 )
 ```
 
-Another M1 mini goes through `macMini()`. A Mac that is not an M1 mini, with different cores, GPU or user, gets a `RemoteTarget` written out in full, or a second factory once there are two of it.
+A Mac goes through `mac()`, which takes the address, port, an `AppleChip` (model, GPU and clusters) and the NAS rows, and supplies the `stephenbrandon` login, the loopback forward and the Data volume on `disk0`. A Mac with a different login or a LAN-bound exporter gets a `RemoteTarget` written out in full.
+
+`mac-studio` is the Studio: `stephenbrandon@192.168.69.19`, port 19119, Homebrew's node_exporter run by root launchd as `nobody` on loopback, and Models and Mirror NAS rows for the BabyNas library and its DondeNas copy. The exporter and its readiness collector are deployed from `~/dev/homelab/hosts/mac-studio/`.
 
 `mac-mini-m6` is the explicit M6 example: `stephenbrandon@192.168.70.165`, a loopback-only exporter owned by root launchd, workstation port 19265, one internal APFS container plus Models and Backups NAS rows. Its three tiers are declared from CPU node indices, not `hw.perflevel` order; see [Heterogeneous cores](#heterogeneous-cores).
 
@@ -181,6 +183,8 @@ An APU with no collector stage, like Legion's Radeon 780M, still reports its tem
 ### Heterogeneous cores
 
 node_exporter publishes no performance levels, so mixed cores are declared in `clusters`, in core-index order. Check the order. On a Mac, run a few busy loops at background QoS (`taskpolicy -b sh -c 'while :; do :; done'`, killed by PID afterwards) and see which core indices go busy: background work runs only on the lowest tier, which on M1 is cpu0–3. On Linux, `lscpu -e=CPU,CORE,MAXMHZ` shows the tiers by clock. Clusters count logical CPUs and the header prints the counts, so a P-core cluster with SMT reads as "12P" on a 6P+4E chip; homelab-1 declares none for that reason.
+
+A cluster is a contiguous run of indices, so a chip whose dies each carry every tier declares one cluster per run. The grid draws a divider at each run and the header totals the runs by name. On the M5 Ultra, `ioreg -p IODeviceTree -n cpus -r -l` shows cpu0–11 as `M` (Performance) and cpu12–17 as `P` (Super) on the first die, and cpu18–35 repeating that layout on the second. The Studio therefore declares Performance 12, Super 6, Performance 12, Super 6, and its header reads `24P + 12S`. `hw.perflevel` reports only the two totals.
 
 The core grid wraps onto two rows by itself when its bars would narrow below 7 px.
 

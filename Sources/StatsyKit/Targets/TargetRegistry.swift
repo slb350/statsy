@@ -103,86 +103,82 @@ public enum TargetRegistry {
         )
     }
 
-    public static let macMini2 = macMini(
-        id: "mac-mini-2", address: "192.168.68.82", localPort: 19182,
-        network: [
-            RemoteVolume(
-                mountPoint: "/Users/stephenbrandon/NAS/models", name: "Models", role: .network
-            ),
-            RemoteVolume(
-                mountPoint: "/Users/stephenbrandon/NAS/novels-backups", name: "Backups",
-                role: .network
-            )
-        ]
+    /// A NAS mount under the Mac login's `~/NAS`, drawn but never counted.
+    private static func nas(_ directory: String, _ name: String) -> RemoteVolume {
+        RemoteVolume(mountPoint: "/Users/stephenbrandon/NAS/" + directory, name: name, role: .network)
+    }
+
+    /// The header facts and core runs of one Apple silicon chip.
+    private struct AppleChip {
+        let model: String
+        let gpuDescription: String
+        let clusters: [CPUCluster]
+    }
+
+    /// M1 numbers its efficiency cores first.
+    private static let appleM1 = AppleChip(
+        model: "Apple M1", gpuDescription: "8-core GPU",
+        clusters: [CPUCluster(name: "Efficiency", coreCount: 4), CPUCluster(name: "Performance", coreCount: 4)]
     )
 
-    public static let macMini3 = macMini(
-        id: "mac-mini-3", address: "192.168.68.84", localPort: 19184,
-        network: [
-            RemoteVolume(
-                mountPoint: "/Users/stephenbrandon/NAS/novels-backups", name: "Backups",
-                role: .network
-            )
-        ]
+    public static let macMini2 = mac(
+        id: "mac-mini-2", address: "192.168.68.82", localPort: 19182, chip: appleM1,
+        network: [nas("models", "Models"), nas("novels-backups", "Backups")]
     )
 
-    public static let macMiniM6 = Target(
-        id: "mac-mini-m6", name: "mac-mini-m6",
-        source: .remote(
-            RemoteTarget(
-                sshUser: "stephenbrandon", sshHost: "192.168.70.165",
-                // Root launchd owns the loopback-only exporter.
-                exporterHost: "127.0.0.1", localPort: 19265,
-                platform: .macOS, hostName: "mac-mini-m6",
-                model: "Apple M6", gpuDescription: "12-core GPU",
-                // IODeviceTree: cpu0–5 E, cpu6–7 P (Super), cpu8–11 M
-                // (Performance). hw.perflevel reports the opposite tier order.
-                clusters: [
-                    CPUCluster(name: "Efficiency", coreCount: 6),
-                    CPUCluster(name: "Super", coreCount: 2),
-                    CPUCluster(name: "Performance", coreCount: 4)
-                ],
-                volumes: [
-                    RemoteVolume(mountPoint: "/System/Volumes/Data", name: "Data", role: .data),
-                    RemoteVolume(
-                        mountPoint: "/Users/stephenbrandon/NAS/models", name: "Models", role: .network
-                    ),
-                    RemoteVolume(
-                        mountPoint: "/Users/stephenbrandon/NAS/novels-backups", name: "Backups",
-                        role: .network
-                    )
-                ],
-                diskDevices: ["disk0"]
-            )
-        )
+    public static let macMini3 = mac(
+        id: "mac-mini-3", address: "192.168.68.84", localPort: 19184, chip: appleM1,
+        network: [nas("novels-backups", "Backups")]
     )
 
-    /// The two M1 minis differ only in address and NAS mounts.
+    public static let macMiniM6 = mac(
+        id: "mac-mini-m6", address: "192.168.70.165", localPort: 19265,
+        chip: AppleChip(
+            model: "Apple M6", gpuDescription: "12-core GPU",
+            // IODeviceTree: cpu0–5 E, cpu6–7 P (Super), cpu8–11 M
+            // (Performance). hw.perflevel reports the opposite tier order.
+            clusters: [
+                CPUCluster(name: "Efficiency", coreCount: 6),
+                CPUCluster(name: "Super", coreCount: 2),
+                CPUCluster(name: "Performance", coreCount: 4)
+            ]
+        ),
+        network: [nas("models", "Models"), nas("novels-backups", "Backups")]
+    )
+
+    /// Each of the M5 Ultra's two dies numbers its 12 Performance cores before
+    /// its 6 Super cores (IODeviceTree cluster types M then P), so the grid
+    /// needs all four boundaries; the header totals them as 24P + 12S.
+    private static let ultraDie = [
+        CPUCluster(name: "Performance", coreCount: 12),
+        CPUCluster(name: "Super", coreCount: 6)
+    ]
+
+    public static let macStudio = mac(
+        id: "mac-studio", address: "192.168.69.19", localPort: 19119,
+        chip: AppleChip(model: "Apple M5 Ultra", gpuDescription: "80-core GPU", clusters: ultraDie + ultraDie),
+        network: [nas("babynas-models", "Models"), nas("dondenas-models", "Mirror")]
+    )
+
+    /// A Mac reached as `stephenbrandon`, named the same in the menu, the
+    /// header and its collector's `asset_host` label.
     ///
-    /// Their exporter is a loopback-only LaunchAgent, so the forward lands on
+    /// Every Mac's exporter listens on loopback only (a LaunchAgent on the M1
+    /// minis, root launchd on the M6 and the Studio), so the forward lands on
     /// 127.0.0.1. APFS reports one container's capacity for every volume in
     /// it, so the Data volume stands for the whole disk.
-    private static func macMini(
-        id: String, address: String, localPort: Int, network: [RemoteVolume]
+    private static func mac(
+        id: String, address: String, localPort: Int, chip: AppleChip, network: [RemoteVolume]
     ) -> Target {
         Target(
             id: id,
             name: id,
             source: .remote(
                 RemoteTarget(
-                    sshUser: "stephenbrandon",
-                    sshHost: address,
-                    exporterHost: "127.0.0.1",
-                    localPort: localPort,
-                    platform: .macOS,
-                    hostName: id,
-                    model: "Apple M1",
-                    gpuDescription: "8-core GPU",
-                    // M1 numbers its efficiency cores first.
-                    clusters: [
-                        CPUCluster(name: "Efficiency", coreCount: 4),
-                        CPUCluster(name: "Performance", coreCount: 4)
-                    ],
+                    sshUser: "stephenbrandon", sshHost: address,
+                    exporterHost: "127.0.0.1", localPort: localPort,
+                    platform: .macOS, hostName: id,
+                    model: chip.model, gpuDescription: chip.gpuDescription, clusters: chip.clusters,
                     volumes: [
                         RemoteVolume(mountPoint: "/System/Volumes/Data", name: "Data", role: .data)
                     ] + network,
@@ -193,7 +189,7 @@ public enum TargetRegistry {
     }
 
     public static let all: [Target] = [
-        local, homelabAI1, strix, homelab1, homelabLegion, macMini2, macMini3, macMiniM6
+        local, homelabAI1, strix, homelab1, homelabLegion, macMini2, macMini3, macMiniM6, macStudio
     ]
 
     public static func target(id: String) -> Target? {
